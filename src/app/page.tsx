@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { MadeWithDyad } from "@/components/made-with-dyad";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -13,9 +14,11 @@ export default function Home() {
             AI와 함께하는 즐거운 퀴즈 시간! 퀴즈를 만들거나 참여해보세요.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="w-full sm:w-auto">
-              퀴즈 만들기 (교사용)
-            </Button>
+            <Link href="/teacher/create">
+              <Button size="lg" className="w-full sm:w-auto">
+                퀴즈 만들기 (교사용)
+              </Button>
+            </Link>
             <Button size="lg" variant="outline" className="w-full sm:w-auto">
               퀴즈 참여하기 (학생용)
             </Button>
