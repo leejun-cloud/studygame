@@ -46,11 +46,12 @@ export default function CreateQuizPage() {
         body: JSON.stringify({ context }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("퀴즈 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        throw new Error(data.error || "알 수 없는 오류가 발생했습니다.");
       }
 
-      const data = await response.json();
       setQuiz(data);
     } catch (err: any) {
       setError(err.message);
@@ -103,7 +104,7 @@ export default function CreateQuizPage() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col items-end gap-4">
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p className="text-sm text-red-500 self-start px-1">{error}</p>}
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isLoading ? "퀴즈 생성 중..." : "AI로 퀴즈 생성하기"}
