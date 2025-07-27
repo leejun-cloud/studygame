@@ -19,9 +19,11 @@ export default function Home() {
                 퀴즈 만들기 (교사용)
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto">
-              퀴즈 참여하기 (학생용)
-            </Button>
+            <Link href="/student/join">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                퀴즈 참여하기 (학생용)
+              </Button>
+            </Link>
           </div>
         </div>
       </main>
