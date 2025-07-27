@@ -1,9 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
+import mammoth from "mammoth";
+import pdf from "pdf-parse";
 
 export async function POST(req: NextRequest) {
-  const { context } = await req.json();
-
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json(
       { error: "Gemini API 키가 설정되지 않았습니다." },
@@ -11,16 +11,46 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!context) {
-    return NextResponse.json(
-      { error: "퀴즈를 생성할 내용이 필요합니다." },
-      { status: 400 }
-    );
-  }
+  const contentType = req.headers.get("content-type") || "";
+  let context = "";
 
   try {
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      const file = formData.get("file") as File | null;
+
+      if (!file) {
+        return NextResponse.json({ error: "파일이 없습니다." }, { status: 400 });
+      }
+
+      const buffer = Buffer.from(await file.arrayBuffer());
+
+      if (file.type === "application/pdf") {
+        const data = await pdf(buffer);
+        context = data.text;
+      } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+        const { value } = await mammoth.extractRawText({ buffer });
+        context = value;
+      } else if (file.type === "text/plain") {
+        context = buffer.toString("utf-8");
+      } else {
+        return NextResponse.json({ error: "지원하지 않는 파일 형식입니다. PDF, DOCX, TXT 파일만 가능합니다." }, { status: 400 });
+      }
+    } else if (contentType.includes("application/json")) {
+      const { context: textContext } = await req.json();
+      context = textContext;
+    } else {
+      return NextResponse.json({ error: "잘못된 요청 형식입니다." }, { status: 400 });
+    }
+
+    if (!context) {
+      return NextResponse.json(
+        { error: "퀴즈를 생성할 내용이 없습니다." },
+        { status: 400 }
+      );
+    }
+
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // 더 새롭고 안정적인 모델로 변경
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash-latest",
       generationConfig: {
@@ -28,7 +58,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // AI에게 더 명확한 지시를 내리는 프롬프트로 수정
     const prompt = `
       당신은 퀴즈 생성 API입니다. 주어진 텍스트를 기반으로 5개의 객관식 퀴즈를 생성하세요. 
       각 질문에는 4개의 선택지가 있어야 하며, 정답은 하나뿐입니다.
@@ -53,19 +82,18 @@ export async function POST(req: NextRequest) {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const jsonString = response.text();
-    
     const quizData = JSON.parse(jsonString);
 
     return NextResponse.json(quizData);
   } catch (error: any) {
-    console.error("Error generating quiz:", error);
-    let errorMessage = "퀴즈 생성 중 AI 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+    console.error("Error in generate-quiz API:", error);
+    let errorMessage = "퀴즈 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
     if (error.message?.includes("API key not valid")) {
       errorMessage = "Gemini API 키가 유효하지 않습니다. 올바른 키인지 확인해주세요.";
-    } else if (error.message?.includes("SAFETY")) {
-      errorMessage = "콘텐츠 안전 문제로 인해 퀴즈를 생성할 수 없습니다. 다른 내용을 시도해주세요.";
     } else if (error instanceof SyntaxError) {
       errorMessage = "AI가 유효하지 않은 형식의 응답을 반환했습니다. 다시 시도해주세요.";
+    } else if (error.message?.includes("SAFETY")) {
+        errorMessage = "콘텐츠 안전 문제로 인해 퀴즈를 생성할 수 없습니다. 다른 내용을 시도해주세요.";
     }
     
     return NextResponse.json(

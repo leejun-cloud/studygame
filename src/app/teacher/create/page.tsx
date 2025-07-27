@@ -12,9 +12,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Paperclip, X } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 interface QuizQuestion {
   questionText: string;
@@ -25,14 +25,31 @@ interface QuizQuestion {
 export default function CreateQuizPage() {
   const [title, setTitle] = useState("");
   const [context, setContext] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [quiz, setQuiz] = useState<{ questions: QuizQuestion[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setContext(""); // 파일 선택 시 텍스트 내용 초기화
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""; // 파일 입력 초기화
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!context) {
-      setError("퀴즈를 생성할 내용을 입력해주세요.");
+    if (!file && !context) {
+      setError("퀴즈를 생성할 내용이나 파일을 업로드해주세요.");
       return;
     }
     setIsLoading(true);
@@ -40,18 +57,26 @@ export default function CreateQuizPage() {
     setQuiz(null);
 
     try {
-      const response = await fetch("/api/generate-quiz", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ context }),
-      });
+      let response;
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        response = await fetch("/api/generate-quiz", {
+          method: "POST",
+          body: formData,
+        });
+      } else {
+        response = await fetch("/api/generate-quiz", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ context }),
+        });
+      }
 
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.error || "알 수 없는 오류가 발생했습니다.");
       }
-
       setQuiz(data);
     } catch (err: any) {
       setError(err.message);
@@ -91,16 +116,37 @@ export default function CreateQuizPage() {
                 <Label htmlFor="context">퀴즈 내용</Label>
                 <Textarea
                   id="context"
-                  placeholder="여기에 교과서 내용, 강의 노트, 또는 관련 자료를 붙여넣으세요..."
+                  placeholder="여기에 내용을 붙여넣거나, 아래에서 파일을 업로드하세요."
                   className="min-h-[200px]"
                   value={context}
-                  onChange={(e) => setContext(e.target.value)}
+                  onChange={(e) => {
+                    setContext(e.target.value);
+                    if (file) handleRemoveFile();
+                  }}
+                  disabled={!!file || isLoading}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="file">파일 업로드 (PDF, PPT, Word 등)</Label>
-                <Input id="file" type="file" disabled={isLoading} />
-                <p className="text-xs text-muted-foreground">파일 분석 기능은 현재 개발 중입니다. 우선 퀴즈 내용을 직접 붙여넣어 사용해주세요.</p>
+                <Label htmlFor="file">파일 업로드 (PDF, DOCX, TXT)</Label>
+                <Input
+                  id="file"
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  disabled={isLoading}
+                  accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                />
+                {file && (
+                  <div className="mt-2 flex items-center justify-between rounded-lg border bg-muted/50 p-2 text-sm">
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <Paperclip className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate" title={file.name}>{file.name}</span>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={handleRemoveFile} disabled={isLoading}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
             <CardFooter className="flex flex-col items-end gap-4">
