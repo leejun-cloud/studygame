@@ -23,9 +23,9 @@ interface Quiz {
   questions: Question[];
 }
 interface Question {
-  question: string;
+  questionText: string;
   options: string[];
-  correct_option: number;
+  correctAnswerIndex: number;
 }
 interface Session {
   id: string;
@@ -127,7 +127,7 @@ export default function StudentQuizPage() {
     setHasAnswered(true);
     setSelectedOption(optionIndex);
 
-    const isCorrect = optionIndex === currentQuestion.correct_option;
+    const isCorrect = optionIndex === currentQuestion.correctAnswerIndex;
     // Simple scoring: 100 points for correct answer
     const score = isCorrect ? 100 : 0;
 
@@ -171,7 +171,7 @@ export default function StudentQuizPage() {
         }
         
         const isResultView = session.status === 'question_result';
-        const isCorrect = selectedOption === currentQuestion.correct_option;
+        const isCorrect = selectedOption === currentQuestion.correctAnswerIndex;
 
         return (
           <Card className="w-full">
@@ -185,12 +185,12 @@ export default function StudentQuizPage() {
             )}
             <CardHeader>
               <CardTitle>문제 {session.current_question_index + 1}</CardTitle>
-              <p className="text-xl font-semibold pt-4">{currentQuestion.question}</p>
+              <p className="text-xl font-semibold pt-4">{currentQuestion.questionText}</p>
             </CardHeader>
             <CardContent className="space-y-4">
               {currentQuestion.options.map((option, index) => {
                 const isSelected = selectedOption === index;
-                const isCorrectOption = currentQuestion.correct_option === index;
+                const isCorrectOption = currentQuestion.correctAnswerIndex === index;
                 
                 return (
                   <Button

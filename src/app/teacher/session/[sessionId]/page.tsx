@@ -34,9 +34,9 @@ interface Quiz {
   questions: Question[];
 }
 interface Question {
-  question: string;
+  questionText: string;
   options: string[];
-  correct_option: number;
+  correctAnswerIndex: number;
 }
 interface Session {
   id: string;
@@ -91,7 +91,7 @@ export default function QuizHostDashboard() {
         toast.error("퀴즈 정보를 불러오는 데 실패했습니다.");
         return;
       }
-      setQuiz(quizData);
+      setQuiz(quizData as Quiz);
       setLoading(false);
     };
 
@@ -202,7 +202,7 @@ export default function QuizHostDashboard() {
             )}
             {(session.status === "in_progress" || session.status === "question_result") && currentQuestion && (
               <div className="w-full max-w-2xl text-center">
-                <h2 className="text-2xl font-bold mb-6">{currentQuestion.question}</h2>
+                <h2 className="text-2xl font-bold mb-6">{currentQuestion.questionText}</h2>
                 {session.status === "in_progress" && (
                   <p className="text-muted-foreground">{answers.length} / {participants.length} 명 답변 완료</p>
                 )}
@@ -218,8 +218,8 @@ export default function QuizHostDashboard() {
                     </ChartContainer>
                     <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                       {currentQuestion.options.map((opt, i) => (
-                        <div key={i} className={`p-2 rounded-md flex items-center gap-2 ${i === currentQuestion.correct_option ? 'bg-green-100' : 'bg-red-100'}`}>
-                          {i === currentQuestion.correct_option ? <CheckCircle className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-red-600" />}
+                        <div key={i} className={`p-2 rounded-md flex items-center gap-2 ${i === currentQuestion.correctAnswerIndex ? 'bg-green-100' : 'bg-red-100'}`}>
+                          {i === currentQuestion.correctAnswerIndex ? <CheckCircle className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-red-600" />}
                           <span>{opt}</span>
                         </div>
                       ))}
