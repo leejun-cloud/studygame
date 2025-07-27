@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Copy } from "lucide-react";
-import { QRCode } from "qrcode.react";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 
 interface QuizShareCardProps {
@@ -46,7 +46,7 @@ export function QuizShareCard({ quizId, title }: QuizShareCardProps) {
         <div className="flex flex-col items-center gap-4 rounded-lg border p-6">
             <Label className="text-sm">QR 코드로 참여하기</Label>
             <div className="bg-white p-2 rounded-md">
-                <QRCode value={shareUrl} size={128} />
+                <QRCodeSVG value={shareUrl} size={128} />
             </div>
         </div>
       </CardContent>
