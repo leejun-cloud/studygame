@@ -19,7 +19,7 @@ import { useState, useRef } from "react";
 import { QuizShareCard } from "@/components/quiz-share-card";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-
+import { saveQuiz } from "@/app/actions/quiz";
 
 interface QuizQuestion {
   questionText: string;
@@ -33,6 +33,7 @@ export default function CreateQuizPage() {
   const [file, setFile] = useState<File | null>(null);
   const [numQuestions, setNumQuestions] = useState("5");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [quiz, setQuiz] = useState<{ questions: QuizQuestion[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedQuizId, setSavedQuizId] = useState<string | null>(null);
@@ -96,11 +97,22 @@ export default function CreateQuizPage() {
 
   const handleSaveQuiz = async () => {
     if (!quiz) return;
-    // TODO: 이 부분은 다음 단계에서 Supabase 데이터베이스에 실제로 저장하는 로직으로 대체됩니다.
-    // 현재는 임시로 고유 ID를 생성하여 공유 기능을 보여줍니다.
-    const fakeQuizId = Math.random().toString(36).substring(2, 10);
-    setSavedQuizId(fakeQuizId);
-    toast.info("퀴즈가 임시 저장되었습니다. 링크를 공유할 수 있습니다.");
+    setIsSaving(true);
+    setSavedQuizId(null);
+
+    const result = await saveQuiz({
+      title: title || "제목 없는 퀴즈",
+      questions: quiz.questions,
+    });
+
+    setIsSaving(false);
+
+    if (result.error) {
+      toast.error(result.error);
+    } else if (result.id) {
+      setSavedQuizId(result.id);
+      toast.success("퀴즈가 성공적으로 저장되었습니다!");
+    }
   };
 
   return (
@@ -215,7 +227,10 @@ export default function CreateQuizPage() {
                 ))}
               </CardContent>
               <CardFooter className="flex justify-end">
-                  <Button onClick={handleSaveQuiz}>퀴즈 저장하기</Button>
+                  <Button onClick={handleSaveQuiz} disabled={isSaving}>
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    퀴즈 저장하기
+                  </Button>
               </CardFooter>
             </Card>
           )}

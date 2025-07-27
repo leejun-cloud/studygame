@@ -6,28 +6,19 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { getQuiz } from "@/app/actions/quiz";
 
-// 데이터베이스가 없으므로 임시 샘플 데이터 사용
-const MOCK_QUIZ = {
-  title: "샘플 퀴즈: 한국사",
-  questions: [
-    {
-      questionText: "조선을 건국한 왕의 이름은 무엇인가요?",
-      options: ["궁예", "왕건", "이성계", "세종대왕"],
-      correctAnswerIndex: 2,
-    },
-    {
-      questionText: "한글을 창제한 왕은 누구인가요?",
-      options: ["태조", "광개토대왕", "장보고", "세종대왕"],
-      correctAnswerIndex: 3,
-    },
-    {
-      questionText: "임진왜란 당시 조선 수군을 이끈 장군은 누구인가요?",
-      options: ["이순신", "권율", "김유신", "을지문덕"],
-      correctAnswerIndex: 0,
-    },
-  ],
-};
+interface QuizQuestion {
+  questionText: string;
+  options: string[];
+  correctAnswerIndex: number;
+}
+
+interface QuizData {
+  id: string;
+  title: string;
+  questions: QuizQuestion[];
+}
 
 interface PageProps {
   params: {
@@ -38,20 +29,30 @@ interface PageProps {
 export default function StudentQuizPage({ params }: PageProps) {
   const { quizId } = params;
   const [loading, setLoading] = useState(true);
-  const [quizData, setQuizData] = useState<typeof MOCK_QUIZ | null>(null);
+  const [quizData, setQuizData] = useState<QuizData | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
 
   useEffect(() => {
-    // 실제 앱에서는 quizId를 사용해 데이터베이스에서 퀴즈 데이터를 가져옵니다.
-    // 지금은 샘플 데이터를 사용합니다.
-    setLoading(true);
-    setTimeout(() => {
-      setQuizData(MOCK_QUIZ);
+    const fetchQuiz = async () => {
+      setLoading(true);
+      setError(null);
+      const result = await getQuiz(quizId);
+      if (result.error || !result.quiz) {
+        setError(result.error || "퀴즈를 불러올 수 없습니다.");
+      } else {
+        // @ts-ignore
+        setQuizData(result.quiz);
+      }
       setLoading(false);
-    }, 500);
+    };
+
+    if (quizId) {
+      fetchQuiz();
+    }
   }, [quizId]);
 
   const handleAnswerSelect = (index: number) => {
@@ -83,7 +84,7 @@ export default function StudentQuizPage({ params }: PageProps) {
     );
   }
 
-  if (!quizData) {
+  if (error || !quizData) {
     return (
       <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40 p-4">
         <Card>
@@ -91,8 +92,13 @@ export default function StudentQuizPage({ params }: PageProps) {
             <CardTitle>오류</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>퀴즈를 불러올 수 없습니다. 링크가 올바른지 확인해주세요.</p>
+            <p>{error || "퀴즈를 불러올 수 없습니다. 링크가 올바른지 확인해주세요."}</p>
           </CardContent>
+           <CardFooter className="flex justify-center">
+              <Link href="/">
+                  <Button variant="outline">홈으로 돌아가기</Button>
+              </Link>
+          </CardFooter>
         </Card>
       </div>
     );
