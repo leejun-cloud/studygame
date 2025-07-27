@@ -20,38 +20,40 @@ export async function POST(req: NextRequest) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    // 더 새롭고 안정적인 모델로 변경
     const model = genAI.getGenerativeModel({
-      model: "gemini-pro",
+      model: "gemini-1.5-flash-latest",
       generationConfig: {
         responseMimeType: "application/json",
       },
     });
 
+    // AI에게 더 명확한 지시를 내리는 프롬프트로 수정
     const prompt = `
-      당신은 전문 퀴즈 출제자입니다. 다음 텍스트를 기반으로 객관식 퀴즈를 생성해 주세요.
-      - 퀴즈는 총 5문제여야 합니다.
-      - 각 질문에는 4개의 선택지가 있고, 그중 하나만 정답이어야 합니다.
-      - 학생들의 학습을 돕기 위해 명확하고 간결하게 질문을 만들어주세요.
-      - 응답은 반드시 다음 JSON 스키마를 따르는 JSON 객체여야 하며, 다른 설명은 포함하지 마세요:
+      당신은 퀴즈 생성 API입니다. 주어진 텍스트를 기반으로 5개의 객관식 퀴즈를 생성하세요. 
+      각 질문에는 4개의 선택지가 있어야 하며, 정답은 하나뿐입니다.
+      응답은 반드시 유효한 JSON 객체 하나여야 하며, 다른 설명이나 마크다운 서식을 포함해서는 안 됩니다.
+      JSON 객체는 다음 스키마를 따라야 합니다:
       {
         "questions": [
           {
-            "questionText": "질문 내용",
-            "options": ["선택지 1", "선택지 2", "선택지 3", "선택지 4"],
+            "questionText": "질문 문자열",
+            "options": ["선택지1", "선택지2", "선택지3", "선택지4"],
             "correctAnswerIndex": 0
           }
         ]
       }
 
-      ---
       퀴즈 생성용 텍스트:
+      """
       ${context}
-      ---
+      """
     `;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const jsonString = response.text();
+    
     const quizData = JSON.parse(jsonString);
 
     return NextResponse.json(quizData);
@@ -62,6 +64,8 @@ export async function POST(req: NextRequest) {
       errorMessage = "Gemini API 키가 유효하지 않습니다. 올바른 키인지 확인해주세요.";
     } else if (error.message?.includes("SAFETY")) {
       errorMessage = "콘텐츠 안전 문제로 인해 퀴즈를 생성할 수 없습니다. 다른 내용을 시도해주세요.";
+    } else if (error instanceof SyntaxError) {
+      errorMessage = "AI가 유효하지 않은 형식의 응답을 반환했습니다. 다시 시도해주세요.";
     }
     
     return NextResponse.json(
