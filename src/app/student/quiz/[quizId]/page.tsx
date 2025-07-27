@@ -66,15 +66,16 @@ function QuizFlow({ quizId }: { quizId: string }) {
     if (selectedAnswer === null || !quizData) return;
 
     if (selectedAnswer === quizData.questions[currentQuestionIndex].correctAnswerIndex) {
-      setScore(score + 1);
+      setScore(s => s + 1);
     }
 
     setSelectedAnswer(null);
 
-    if (currentQuestionIndex < quizData.questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
+    const isLastQuestion = currentQuestionIndex === quizData.questions.length - 1;
+    if (isLastQuestion) {
       setShowResult(true);
+    } else {
+      setCurrentQuestionIndex(i => i + 1);
     }
   };
 
