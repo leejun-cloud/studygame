@@ -21,18 +21,32 @@ export function QuizShareCard({ quizId, title }: QuizShareCardProps) {
     toast.success("링크가 클립보드에 복사되었습니다!");
   };
 
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(quizId);
+    toast.success("퀴즈 코드가 클립보드에 복사되었습니다!");
+  };
+
   return (
     <Card className="mt-8">
       <CardHeader>
         <CardTitle>퀴즈 공유</CardTitle>
         <CardDescription>
-          아래 링크나 QR 코드를 학생들에게 공유하여 퀴즈에 참여하게 하세요.
+          아래 코드, 링크, QR 코드를 학생들에게 공유하여 퀴즈에 참여하게 하세요.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-6">
         <div className="grid gap-2">
           <Label>퀴즈 제목</Label>
           <p className="text-lg font-semibold">{title}</p>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="quiz-code">퀴즈 코드</Label>
+          <div className="flex items-center gap-2">
+            <Input id="quiz-code" value={quizId} readOnly />
+            <Button size="icon" variant="outline" onClick={handleCopyCode}>
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="share-link">공유 링크</Label>
