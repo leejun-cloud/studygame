@@ -216,10 +216,10 @@ export default function CreateQuizPage() {
                 {quiz.questions.map((q, index) => (
                   <div key={index} className="border-t pt-4 first:border-t-0 first:pt-0">
                     <p className="font-semibold">{index + 1}. {q.questionText}</p>
-                    <ul className="mt-2 space-y-1 list-inside">
+                    <ul className="mt-2 space-y-1 list-none">
                       {q.options.map((option, i) => (
-                        <li key={i} className={`pl-2 ${i === q.correctAnswerIndex ? 'font-bold text-green-600' : ''}`}>
-                          - {option}
+                        <li key={i} className={`pl-4 ${i === q.correctAnswerIndex ? 'font-bold text-green-600' : ''}`}>
+                          {i + 1}. {option}
                         </li>
                       ))}
                     </ul>
