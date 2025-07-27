@@ -3,7 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { getQuiz } from "@/app/actions/quiz";
@@ -26,8 +27,10 @@ interface PageProps {
   };
 }
 
-export default function StudentQuizPage({ params }: PageProps) {
-  const { quizId } = params;
+function QuizFlow({ quizId }: { quizId: string }) {
+  const searchParams = useSearchParams();
+  const studentName = searchParams.get("name");
+
   const [loading, setLoading] = useState(true);
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -115,6 +118,7 @@ export default function StudentQuizPage({ params }: PageProps) {
                   <CardTitle>{quizData.title}</CardTitle>
                   <CardDescription>
                     문제 {currentQuestionIndex + 1} / {quizData.questions.length}
+                    {studentName && ` | 응시자: ${studentName}`}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -145,7 +149,7 @@ export default function StudentQuizPage({ params }: PageProps) {
             ) : (
               <>
                 <CardHeader className="items-center">
-                  <CardTitle>퀴즈 결과</CardTitle>
+                  <CardTitle>{studentName ? `${studentName}님의 ` : ''}퀴즈 결과</CardTitle>
                   <CardDescription>수고하셨습니다!</CardDescription>
                 </CardHeader>
                 <CardContent className="text-center">
@@ -166,5 +170,17 @@ export default function StudentQuizPage({ params }: PageProps) {
       </main>
       <MadeWithDyad />
     </div>
+  );
+}
+
+export default function StudentQuizPage({ params }: PageProps) {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40 p-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <QuizFlow quizId={params.quizId} />
+    </Suspense>
   );
 }
