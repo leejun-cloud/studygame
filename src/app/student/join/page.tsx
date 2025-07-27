@@ -49,67 +49,65 @@ export default function JoinQuizPage() {
   };
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Toaster />
-      <div className="flex min-h-screen flex-col">
-        <main className="flex flex-1 flex-col items-center justify-center bg-muted/40 p-4 sm:p-8">
-          <div className="w-full max-w-md">
-            <div className="mb-4">
-              <Link
-                href="/"
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>홈으로 돌아가기</span>
-              </Link>
-            </div>
-            <Card>
-              <CardHeader>
-                <CardTitle>실시간 퀴즈 참여</CardTitle>
-                <CardDescription>
-                  이름과 선생님께 받은 게임 코드를 입력해주세요.
-                </Description>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleJoinWithCode} className="space-y-6">
-                  <div className="grid gap-2">
-                    <Label htmlFor="student-name">이름</Label>
-                    <Input
-                      id="student-name"
-                      placeholder="이름을 입력하세요"
-                      value={studentName}
-                      onChange={(e) => setStudentName(e.target.value)}
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="game-code">게임 코드</Label>
-                    <Input
-                      id="game-code"
-                      placeholder="예: AB12CD"
-                      value={gameCode}
-                      onChange={(e) => setGameCode(e.target.value.toUpperCase())}
-                      required
-                      maxLength={6}
-                      className="uppercase"
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={!gameCode.trim() || !studentName.trim() || isLoading}
-                  >
-                    {isLoading ? "참여하는 중..." : "퀴즈 참여하기"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+      <main className="flex flex-1 flex-col items-center justify-center bg-muted/40 p-4 sm:p-8">
+        <div className="w-full max-w-md">
+          <div className="mb-4">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>홈으로 돌아가기</span>
+            </Link>
           </div>
-        </main>
-        <MadeWithDyad />
-      </div>
-    </>
+          <Card>
+            <CardHeader>
+              <CardTitle>실시간 퀴즈 참여</CardTitle>
+              <CardDescription>
+                이름과 선생님께 받은 게임 코드를 입력해주세요.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleJoinWithCode} className="space-y-6">
+                <div className="grid gap-2">
+                  <Label htmlFor="student-name">이름</Label>
+                  <Input
+                    id="student-name"
+                    placeholder="이름을 입력하세요"
+                    value={studentName}
+                    onChange={(e) => setStudentName(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="game-code">게임 코드</Label>
+                  <Input
+                    id="game-code"
+                    placeholder="예: AB12CD"
+                    value={gameCode}
+                    onChange={(e) => setGameCode(e.target.value.toUpperCase())}
+                    required
+                    maxLength={6}
+                    className="uppercase"
+                    disabled={isLoading}
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={!gameCode.trim() || !studentName.trim() || isLoading}
+                >
+                  {isLoading ? "참여하는 중..." : "퀴즈 참여하기"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+      <MadeWithDyad />
+    </div>
   );
 }
