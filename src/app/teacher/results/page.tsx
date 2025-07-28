@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getFinishedSessions, getSessionResults } from "@/app/actions/results";
-import { format } from "date-fns";
+import { format } from "date-fns/format";
 
 // 데이터 타입 정의
 interface Session {
