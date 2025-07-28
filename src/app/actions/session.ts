@@ -20,7 +20,8 @@ export async function createQuizSession(quizId: string) {
     console.error("Error creating quiz session:", error);
     return { error: "퀴즈 세션을 만드는 데 실패했습니다." };
   }
-  return { data };
+  // The component expects a `session` object, so we return it with that key.
+  return { session: data };
 }
 
 export async function joinQuizSession(joinCode: string, name: string) {
