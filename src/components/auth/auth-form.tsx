@@ -1,7 +1,7 @@
 'use client'
 
 import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared-themes'
+import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
