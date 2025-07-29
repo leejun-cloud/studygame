@@ -3,9 +3,33 @@
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { supabase } from '@/integrations/supabase/client'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
+import { useEffect, useState } from 'react'
+import { Loader2 } from 'lucide-react'
 
 export function AuthForm() {
+  const [redirectUrl, setRedirectUrl] = useState<string>('');
+
+  useEffect(() => {
+    // This code now runs only on the client, where `window` is available.
+    setRedirectUrl(`${window.location.origin}/auth/callback`);
+  }, []);
+
+  // Render a loading state until the redirect URL is ready on the client.
+  if (!redirectUrl) {
+    return (
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>교사 로그인</CardTitle>
+          <CardDescription>로그인 양식을 불러오는 중입니다...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center items-center h-48">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -17,7 +41,7 @@ export function AuthForm() {
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
           providers={[]}
-          redirectTo={`${window.location.origin}/auth/callback`}
+          redirectTo={redirectUrl}
           localization={{
             variables: {
               sign_in: {
