@@ -12,27 +12,16 @@ export function AuthForm() {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // 'SIGNED_IN' 이벤트가 발생하면, 즉시 대시보드로 리디렉션합니다.
       if (event === 'SIGNED_IN') {
         router.push('/teacher/dashboard');
-        // 페이지를 새로고침하여 서버 컴포넌트들이 새로운 로그인 상태를 인지하도록 합니다.
         router.refresh();
       }
     });
 
-    // 컴포넌트가 언마운트될 때 리스너를 정리합니다.
     return () => {
       subscription.unsubscribe();
     };
   }, [router]);
-
-  // OAuth나 매직링크를 위한 리디렉션 URL을 제공합니다.
-  const getRedirectUrl = () => {
-    if (typeof window !== 'undefined') {
-      return `${window.location.origin}/auth/callback`;
-    }
-    return '';
-  }
 
   return (
     <Card className="w-full max-w-md">
@@ -45,7 +34,6 @@ export function AuthForm() {
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
           providers={[]}
-          redirectTo={getRedirectUrl()}
           localization={{
             variables: {
               sign_in: {
