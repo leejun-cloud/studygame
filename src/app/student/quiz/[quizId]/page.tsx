@@ -47,8 +47,7 @@ function QuizFlow({ quizId }: { quizId: string }) {
       if (result.error || !result.quiz) {
         setError(result.error || "퀴즈를 불러올 수 없습니다.");
       } else {
-        // @ts-ignore
-        setQuizData(result.quiz);
+        setQuizData(result.quiz as QuizData);
       }
       setLoading(false);
     };
