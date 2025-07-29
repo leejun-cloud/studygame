@@ -6,10 +6,6 @@ import { supabaseAdmin } from "@/lib/supabase/server";
  * 완료된 모든 퀴즈 세션 목록을 가져옵니다.
  */
 export async function getFinishedSessions() {
-  if (!supabaseAdmin) {
-    return { error: "서버가 데이터베이스 접근을 위해 설정되지 않았습니다." };
-  }
-
   const { data: sessions, error } = await supabaseAdmin
     .from("quiz_sessions")
     .select(`
@@ -34,10 +30,6 @@ export async function getFinishedSessions() {
  * @param sessionId - 결과를 가져올 세션의 ID
  */
 export async function getSessionResults(sessionId: string) {
-  if (!supabaseAdmin) {
-    return { error: "서버가 데이터베이스 접근을 위해 설정되지 않았습니다." };
-  }
-
   if (!sessionId) {
     return { error: "세션 ID가 필요합니다." };
   }

@@ -4,9 +4,6 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { generate } from "random-words";
 
 export async function createQuizSession(quizId: string) {
-  if (!supabaseAdmin) {
-    return { error: "서버가 데이터베이스 접근을 위해 설정되지 않았습니다." };
-  }
   const joinCode = (generate({ exactly: 2, join: "", formatter: (word) => word.toUpperCase() }) + Math.floor(1000 + Math.random() * 9000).toString());
 
   const { data, error } = await supabaseAdmin
@@ -28,9 +25,6 @@ export async function createQuizSession(quizId: string) {
 }
 
 export async function joinQuizSession(joinCode: string, name: string) {
-  if (!supabaseAdmin) {
-    return { error: "서버가 데이터베이스 접근을 위해 설정되지 않았습니다." };
-  }
   const { data: session, error: sessionError } = await supabaseAdmin
     .from("quiz_sessions")
     .select("id, status")
@@ -63,9 +57,6 @@ export async function joinQuizSession(joinCode: string, name: string) {
 }
 
 export async function startNextQuestion(sessionId: string, questionIndex: number) {
-  if (!supabaseAdmin) {
-    return { error: "서버가 데이터베이스 접근을 위해 설정되지 않았습니다." };
-  }
   const { data, error } = await supabaseAdmin
     .from("quiz_sessions")
     .update({
@@ -85,9 +76,6 @@ export async function startNextQuestion(sessionId: string, questionIndex: number
 }
 
 export async function showQuestionResult(sessionId: string) {
-  if (!supabaseAdmin) {
-    return { error: "서버가 데이터베이스 접근을 위해 설정되지 않았습니다." };
-  }
   const { data, error } = await supabaseAdmin
     .from("quiz_sessions")
     .update({ status: "question_result" })
@@ -103,9 +91,6 @@ export async function showQuestionResult(sessionId: string) {
 }
 
 export async function finishQuizSession(sessionId: string) {
-  if (!supabaseAdmin) {
-    return { error: "서버가 데이터베이스 접근을 위해 설정되지 않았습니다." };
-  }
   const { data, error } = await supabaseAdmin
     .from("quiz_sessions")
     .update({ status: "finished" })
@@ -127,9 +112,6 @@ export async function submitAnswer(
   isCorrect: boolean,
   scoreAwarded: number
 ) {
-  if (!supabaseAdmin) {
-    return { error: "서버가 데이터베이스 접근을 위해 설정되지 않았습니다." };
-  }
   const { data, error } = await supabaseAdmin
     .from("participant_answers")
     .insert({

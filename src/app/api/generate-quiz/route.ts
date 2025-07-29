@@ -4,7 +4,7 @@ import mammoth from "mammoth";
 import pdf from "pdf-parse";
 
 export async function POST(req: NextRequest) {
-  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.trim() === "") {
+  if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json(
       { error: "Gemini API 키가 설정되지 않았습니다." },
       { status: 500 }

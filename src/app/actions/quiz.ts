@@ -21,10 +21,6 @@ const quizSchema = z.object({
  * @returns 저장된 퀴즈의 ID 또는 오류 메시지
  */
 export async function saveQuiz(data: z.infer<typeof quizSchema>) {
-  if (!supabaseAdmin) {
-    return { error: "서버가 데이터베이스 접근을 위해 설정되지 않았습니다." };
-  }
-
   const validation = quizSchema.safeParse(data);
   if (!validation.success) {
     return { error: "유효하지 않은 퀴즈 데이터입니다." };
@@ -52,10 +48,6 @@ export async function saveQuiz(data: z.infer<typeof quizSchema>) {
  * @returns 퀴즈 데이터 또는 오류 메시지
  */
 export async function getQuiz(quizId: string) {
-  if (!supabaseAdmin) {
-    return { error: "서버가 데이터베이스 접근을 위해 설정되지 않았습니다." };
-  }
-
   if (!quizId) {
     return { error: "퀴즈 ID가 필요합니다." };
   }
