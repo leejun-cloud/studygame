@@ -18,14 +18,9 @@ export default function Home() {
             <div className="p-6 border rounded-lg bg-card shadow-sm">
               <h2 className="text-2xl font-semibold mb-4">교사용</h2>
               <div className="flex flex-col gap-4">
-                <Link href="/teacher/create">
+                <Link href="/teacher/dashboard">
                   <Button size="lg" className="w-full">
-                    퀴즈 만들기
-                  </Button>
-                </Link>
-                <Link href="/teacher/results">
-                  <Button size="lg" variant="secondary" className="w-full">
-                    결과 보기
+                    교사 대시보드
                   </Button>
                 </Link>
               </div>

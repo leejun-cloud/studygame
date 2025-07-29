@@ -2,8 +2,31 @@
 
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { generate } from "random-words";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function createQuizSession(quizId: string) {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "세션을 생성하려면 로그인이 필요합니다." };
+  }
+
   const joinCode = (generate({ exactly: 2, join: "", formatter: (word) => word.toUpperCase() }) + Math.floor(1000 + Math.random() * 9000).toString());
 
   const { data, error } = await supabaseAdmin
@@ -12,6 +35,7 @@ export async function createQuizSession(quizId: string) {
       quiz_id: quizId,
       join_code: joinCode,
       status: "waiting",
+      user_id: user.id,
     })
     .select()
     .single();
@@ -20,7 +44,6 @@ export async function createQuizSession(quizId: string) {
     console.error("Error creating quiz session:", error);
     return { error: "퀴즈 세션을 만드는 데 실패했습니다." };
   }
-  // The component expects a `session` object, so we return it with that key.
   return { session: data };
 }
 
