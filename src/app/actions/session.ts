@@ -1,7 +1,6 @@
 "use server";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { generate } from "random-words";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
@@ -23,7 +22,8 @@ export async function createQuizSession(quizId: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const joinCode = (generate({ exactly: 2, join: "", formatter: (word) => word.toUpperCase() }) + Math.floor(1000 + Math.random() * 9000).toString());
+  // 7자리 영문/숫자 조합의 참여 코드 생성
+  const joinCode = Math.random().toString(36).substring(2, 9).toUpperCase();
 
   const { data, error } = await supabaseAdmin
     .from("quiz_sessions")
