@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import {
   startNextQuestion,
   finishQuizSession,
@@ -26,6 +26,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Bar, BarChart as RechartsBarChart, XAxis, YAxis } from "recharts";
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 // Data types
 interface Quiz {
@@ -102,14 +103,14 @@ export default function QuizHostDashboard() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "quiz_sessions", filter: `id=eq.${sessionId}` },
-        (payload) => {
+        (payload: RealtimePostgresChangesPayload<{ [key: string]: any }>) => {
           setSession(payload.new as Session);
         }
       )
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "session_participants", filter: `session_id=eq.${sessionId}` },
-        (payload) => {
+        (payload: RealtimePostgresChangesPayload<{ [key: string]: any }>) => {
           setParticipants((prev) => [...prev, payload.new as Participant]);
         }
       )
@@ -134,7 +135,7 @@ export default function QuizHostDashboard() {
         const { data: answersData } = await supabase
           .from("participant_answers")
           .select("selected_option_index")
-          .in("session_participant_id", (participantsData || []).map(p => p.id))
+          .in("session_participant_id", (participantsData || []).map((p: Participant) => p.id))
           .eq("question_index", session.current_question_index);
         setAnswers(answersData || []);
       } else {

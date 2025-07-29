@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { submitAnswer } from "@/app/actions/session";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import {
 import { Loader2, CheckCircle, XCircle, Trophy } from "lucide-react";
 import { QuizTimer } from "@/components/quiz/timer";
 import { cn } from "@/lib/utils";
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 // Data types
 interface Quiz {
@@ -90,7 +91,7 @@ export default function StudentQuizPage() {
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "quiz_sessions", filter: `id=eq.${sessionId}` },
-        (payload) => {
+        (payload: RealtimePostgresChangesPayload<{ [key: string]: any }>) => {
           const newSession = payload.new as Session;
           // Reset answer state for new question
           if (newSession.current_question_index !== session?.current_question_index) {
@@ -122,7 +123,7 @@ export default function StudentQuizPage() {
   };
 
   const handleAnswer = async (optionIndex: number) => {
-    if (hasAnswered || isTimeUp || !currentQuestion || !participantId) return;
+    if (hasAnswered || isTimeUp || !currentQuestion || !participantId || !session) return;
 
     setHasAnswered(true);
     setSelectedOption(optionIndex);
@@ -133,7 +134,7 @@ export default function StudentQuizPage() {
 
     await submitAnswer(
       participantId,
-      session!.current_question_index,
+      session.current_question_index,
       optionIndex,
       isCorrect,
       score
@@ -233,7 +234,7 @@ export default function StudentQuizPage() {
               <CardTitle className="flex items-center justify-center gap-2">
                 <Trophy className="text-yellow-500" />
                 퀴즈 종료!
-              </TTitle>
+              </CardTitle>
               <CardDescription>수고하셨습니다. 최종 결과는 선생님이 공유해주실 거예요.</CardDescription>
             </CardHeader>
             <CardContent className="text-center">

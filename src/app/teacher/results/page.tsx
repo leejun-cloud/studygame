@@ -32,7 +32,7 @@ interface Session {
   id: string;
   created_at: string;
   join_code: string;
-  quiz: { title: string } | null;
+  quiz: { title: string }[] | null;
 }
 
 interface Participant {
@@ -150,7 +150,7 @@ export default function ResultsPage() {
                     <AccordionTrigger className="hover:no-underline">
                       <div className="flex justify-between items-center w-full pr-4">
                         <div className="text-left">
-                          <p className="font-semibold">{session.quiz?.title || "제목 없는 퀴즈"}</p>
+                          <p className="font-semibold">{session.quiz?.[0]?.title || "제목 없는 퀴즈"}</p>
                           <p className="text-sm text-muted-foreground">
                             {format(new Date(session.created_at), "yyyy년 MM월 dd일 HH:mm")}
                           </p>
