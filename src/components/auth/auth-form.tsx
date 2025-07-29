@@ -23,6 +23,13 @@ export function AuthForm() {
     };
   }, [router]);
 
+  const getRedirectUrl = () => {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/auth/callback`;
+    }
+    return '';
+  }
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -33,7 +40,8 @@ export function AuthForm() {
         <Auth
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
-          providers={[]}
+          providers={['google']}
+          redirectTo={getRedirectUrl()}
           localization={{
             variables: {
               sign_in: {
@@ -52,7 +60,8 @@ export function AuthForm() {
                 email_label: '이메일 주소',
                 button_label: '비밀번호 재설정 링크 보내기',
                 link_text: '비밀번호를 잊으셨나요?',
-              }
+              },
+              social_provider_text: '{{provider}}(으)로 계속하기',
             },
           }}
         />
