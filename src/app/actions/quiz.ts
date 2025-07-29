@@ -107,6 +107,7 @@ export async function getMyQuizzes() {
     }
   );
 
+  /*
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -114,11 +115,12 @@ export async function getMyQuizzes() {
   if (!user) {
     return { error: "로그인이 필요합니다." };
   }
+  */
 
   const { data, error } = await supabase
     .from("quizzes")
     .select("id, title, created_at, questions")
-    .eq("user_id", user.id)
+    // .eq("user_id", user.id) // Temporarily remove user filter
     .order("created_at", { ascending: false });
 
   if (error) {

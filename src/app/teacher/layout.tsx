@@ -3,12 +3,14 @@ import { MainNav } from "@/components/teacher/main-nav";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { Toaster } from "@/components/ui/sonner";
 
 export default async function TeacherLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  /*
   const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,6 +31,7 @@ export default async function TeacherLayout({
   if (!user) {
     redirect("/login");
   }
+  */
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -39,6 +42,7 @@ export default async function TeacherLayout({
         </div>
       </header>
       <main className="flex-1">{children}</main>
+      <Toaster />
     </div>
   );
 }

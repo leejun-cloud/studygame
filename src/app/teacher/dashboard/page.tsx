@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { PlusCircle } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
+import { QuizActions } from "@/components/teacher/quiz-actions";
 
 export default async function DashboardPage() {
   const { quizzes, error } = await getMyQuizzes();
@@ -26,18 +27,18 @@ export default async function DashboardPage() {
       {quizzes && quizzes.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {quizzes.map((quiz) => (
-            <Card key={quiz.id}>
+            <Card key={quiz.id} className="flex flex-col">
               <CardHeader>
                 <CardTitle className="truncate">{quiz.title}</CardTitle>
                 <CardDescription>
                   {format(new Date(quiz.created_at), "yyyy년 MM월 dd일")} 생성됨
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-grow">
                 <p>{Array.isArray(quiz.questions) ? quiz.questions.length : 0}개의 질문</p>
               </CardContent>
               <CardFooter>
-                {/* Action buttons like Edit, Delete, Start Session can be added here later */}
+                <QuizActions quizId={quiz.id} />
               </CardFooter>
             </Card>
           ))}

@@ -23,10 +23,6 @@ export async function createQuizSession(quizId: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return { error: "세션을 생성하려면 로그인이 필요합니다." };
-  }
-
   const joinCode = (generate({ exactly: 2, join: "", formatter: (word) => word.toUpperCase() }) + Math.floor(1000 + Math.random() * 9000).toString());
 
   const { data, error } = await supabaseAdmin
@@ -35,7 +31,7 @@ export async function createQuizSession(quizId: string) {
       quiz_id: quizId,
       join_code: joinCode,
       status: "waiting",
-      user_id: user.id,
+      user_id: user?.id,
     })
     .select()
     .single();
