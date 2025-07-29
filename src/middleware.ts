@@ -2,12 +2,14 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
+  // 응답 객체를 먼저 생성합니다.
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
 
+  // 서버용 Supabase 클라이언트를 생성하고, 요청과 응답의 쿠키를 공유합니다.
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -17,33 +19,21 @@ export async function middleware(request: NextRequest) {
           return request.cookies.get(name)?.value
         },
         set(name: string, value: string, options: CookieOptions) {
-          // 세션 쿠키가 업데이트되면, 요청과 응답 객체를 모두 새로 만들어
-          // 최신 상태를 유지합니다.
-          request.cookies.set({ name, value, ...options })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
+          // 브라우저에 쿠키를 설정하도록 응답 객체에 지시합니다.
           response.cookies.set({ name, value, ...options })
         },
         remove(name: string, options: CookieOptions) {
-          // 세션 쿠키가 삭제될 때도 동일하게 처리합니다.
-          request.cookies.set({ name, value: '', ...options })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
+          // 브라우저에서 쿠키를 삭제하도록 응답 객체에 지시합니다.
           response.cookies.set({ name, value: '', ...options })
         },
       },
     }
   )
 
-  // 사용자의 세션을 갱신합니다.
+  // 사용자의 세션을 갱신합니다. 이 과정에서 쿠키가 변경될 수 있습니다.
   await supabase.auth.getUser()
 
+  // 변경된 쿠키가 포함된 응답을 반환합니다.
   return response
 }
 
