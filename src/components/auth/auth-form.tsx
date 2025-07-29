@@ -3,31 +3,35 @@
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { supabase } from '@/integrations/supabase/client'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
-import { useEffect, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export function AuthForm() {
-  const [redirectUrl, setRedirectUrl] = useState<string>('');
+  const router = useRouter();
 
   useEffect(() => {
-    // This code now runs only on the client, where `window` is available.
-    setRedirectUrl(`${window.location.origin}/auth/callback`);
-  }, []);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // 'SIGNED_IN' 이벤트가 발생하면, 즉시 대시보드로 리디렉션합니다.
+      if (event === 'SIGNED_IN') {
+        router.push('/teacher/dashboard');
+        // 페이지를 새로고침하여 서버 컴포넌트들이 새로운 로그인 상태를 인지하도록 합니다.
+        router.refresh();
+      }
+    });
 
-  // Render a loading state until the redirect URL is ready on the client.
-  if (!redirectUrl) {
-    return (
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>교사 로그인</CardTitle>
-          <CardDescription>로그인 양식을 불러오는 중입니다...</CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center items-center h-48">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </CardContent>
-      </Card>
-    );
+    // 컴포넌트가 언마운트될 때 리스너를 정리합니다.
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [router]);
+
+  // OAuth나 매직링크를 위한 리디렉션 URL을 제공합니다.
+  const getRedirectUrl = () => {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/auth/callback`;
+    }
+    return '';
   }
 
   return (
@@ -41,7 +45,7 @@ export function AuthForm() {
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
           providers={[]}
-          redirectTo={redirectUrl}
+          redirectTo={getRedirectUrl()}
           localization={{
             variables: {
               sign_in: {
