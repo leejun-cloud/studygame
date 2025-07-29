@@ -10,7 +10,6 @@ export default async function TeacherLayout({
 }: {
   children: React.ReactNode;
 }) {
-  /*
   const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,7 +30,6 @@ export default async function TeacherLayout({
   if (!user) {
     redirect("/login");
   }
-  */
 
   return (
     <div className="flex min-h-screen flex-col">

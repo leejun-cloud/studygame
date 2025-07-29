@@ -1,12 +1,13 @@
 import { getMyQuizzes } from "@/app/actions/quiz";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { PlusCircle, Terminal } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
 import { QuizActions } from "@/components/teacher/quiz-actions";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams?: { copied?: string } }) {
   const { quizzes, error } = await getMyQuizzes();
 
   if (error) {
@@ -24,6 +25,15 @@ export default async function DashboardPage() {
           </Button>
         </Link>
       </div>
+      {searchParams?.copied && (
+        <Alert className="mb-6">
+          <Terminal className="h-4 w-4" />
+          <AlertTitle>성공!</AlertTitle>
+          <AlertDescription>
+            퀴즈가 내 목록으로 성공적으로 복사되었습니다.
+          </AlertDescription>
+        </Alert>
+      )}
       {quizzes && quizzes.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {quizzes.map((quiz) => (
@@ -37,7 +47,7 @@ export default async function DashboardPage() {
               <CardContent className="flex-grow">
                 <p>{Array.isArray(quiz.questions) ? quiz.questions.length : 0}개의 질문</p>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="w-full">
                 <QuizActions quizId={quiz.id} />
               </CardFooter>
             </Card>

@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { z } from "zod";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 // Zod를 사용한 데이터 유효성 검사 스키마
 const quizQuestionSchema = z.object({
@@ -107,7 +108,6 @@ export async function getMyQuizzes() {
     }
   );
 
-  /*
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -115,12 +115,11 @@ export async function getMyQuizzes() {
   if (!user) {
     return { error: "로그인이 필요합니다." };
   }
-  */
 
   const { data, error } = await supabase
     .from("quizzes")
     .select("id, title, created_at, questions")
-    // .eq("user_id", user.id) // Temporarily remove user filter
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -129,4 +128,60 @@ export async function getMyQuizzes() {
   }
 
   return { quizzes: data };
+}
+
+/**
+ * 다른 사용자의 퀴즈를 현재 로그인한 사용자의 계정으로 복사합니다.
+ * @param quizId - 복사할 퀴즈의 ID
+ */
+export async function copyQuiz(quizId: string) {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect(`/login?redirect=/quiz/${quizId}`);
+  }
+
+  const { data: originalQuiz, error: fetchError } = await supabaseAdmin
+    .from("quizzes")
+    .select("title, questions, user_id")
+    .eq("id", quizId)
+    .single();
+
+  if (fetchError || !originalQuiz) {
+    return redirect(`/quiz/${quizId}?error=${encodeURIComponent("원본 퀴즈를 찾을 수 없습니다.")}`);
+  }
+
+  if (originalQuiz.user_id === user.id) {
+    return redirect(`/quiz/${quizId}?error=${encodeURIComponent("자신이 만든 퀴즈는 복사할 수 없습니다.")}`);
+  }
+
+  const { error: insertError } = await supabaseAdmin
+    .from("quizzes")
+    .insert({
+      title: `${originalQuiz.title} (복사본)`,
+      questions: originalQuiz.questions,
+      user_id: user.id,
+    });
+
+  if (insertError) {
+    console.error("퀴즈 복사 오류:", insertError);
+    return redirect(`/quiz/${quizId}?error=${encodeURIComponent("퀴즈를 복사하는 데 실패했습니다.")}`);
+  }
+
+  redirect('/teacher/dashboard?copied=true');
 }

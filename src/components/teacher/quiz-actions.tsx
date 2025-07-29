@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createQuizSession } from "@/app/actions/session";
 import { toast } from "sonner";
-import { Loader2, Play } from "lucide-react";
+import { Loader2, Play, Share2 } from "lucide-react";
 import { LiveSessionShareDialog } from "./live-session-share-dialog";
+import { QuizShareDialog } from "./quiz-share-dialog";
 
 interface QuizActionsProps {
   quizId: string;
@@ -20,7 +21,8 @@ interface SessionData {
 export function QuizActions({ quizId }: QuizActionsProps) {
   const [isStarting, setIsStarting] = useState(false);
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLiveShareOpen, setIsLiveShareOpen] = useState(false);
+  const [isQuizShareOpen, setIsQuizShareOpen] = useState(false);
   const router = useRouter();
 
   const handleStartLiveQuiz = async () => {
@@ -32,18 +34,18 @@ export function QuizActions({ quizId }: QuizActionsProps) {
       toast.error(result.error);
     } else if (result.session) {
       setSessionData(result.session);
-      setIsDialogOpen(true);
+      setIsLiveShareOpen(true);
     }
   };
 
   const handleNavigateToSession = (sessionId: string) => {
-    setIsDialogOpen(false);
+    setIsLiveShareOpen(false);
     router.push(`/teacher/session/${sessionId}`);
   };
 
   return (
     <>
-      <div className="flex gap-2">
+      <div className="flex w-full justify-between items-center">
         <Button onClick={handleStartLiveQuiz} disabled={isStarting} size="sm">
           {isStarting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -52,12 +54,21 @@ export function QuizActions({ quizId }: QuizActionsProps) {
           )}
           실시간 시작
         </Button>
+        <Button variant="ghost" size="icon" onClick={() => setIsQuizShareOpen(true)}>
+          <Share2 className="h-4 w-4" />
+          <span className="sr-only">퀴즈 공유</span>
+        </Button>
       </div>
       <LiveSessionShareDialog
-        isOpen={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+        isOpen={isLiveShareOpen}
+        onOpenChange={setIsLiveShareOpen}
         session={sessionData}
         onNavigate={handleNavigateToSession}
+      />
+      <QuizShareDialog
+        isOpen={isQuizShareOpen}
+        onOpenChange={setIsQuizShareOpen}
+        quizId={quizId}
       />
     </>
   );
