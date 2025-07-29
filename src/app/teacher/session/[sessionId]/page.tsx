@@ -177,7 +177,7 @@ export default function QuizHostDashboard() {
   const answerCounts = currentQuestion?.options.map((_, index) => ({
     option: `선택 ${index + 1}`,
     count: answers.filter(a => a.selected_option_index === index).length,
-  }));
+  })) || [];
 
   return (
     <div className="flex h-screen bg-muted/40">

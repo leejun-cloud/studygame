@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["pdf-parse", "mammoth"],
-  },
+  serverComponentsExternalPackages: ["pdf-parse", "mammoth"],
   webpack: (config) => {
     if (process.env.NODE_ENV === "development") {
       config.module.rules.push({
