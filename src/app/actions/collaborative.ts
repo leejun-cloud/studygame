@@ -6,13 +6,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { joinQuizSession } from "./session";
 import { z } from "zod";
-import { quizSchema } from "./quiz";
-
-const submittedQuestionSchema = z.object({
-  questionText: z.string().min(1, "질문 내용은 비워둘 수 없습니다."),
-  options: z.array(z.string().min(1, "모든 선택지를 입력해야 합니다.")).length(4, "4개의 선택지가 필요합니다."),
-  correctAnswerIndex: z.number().min(0).max(3),
-});
+import { quizSchema, submittedQuestionSchema } from "@/lib/schemas";
 
 /**
  * 새로운 협업 퀴즈 세션을 생성합니다.
