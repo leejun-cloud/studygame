@@ -4,8 +4,8 @@ const nextConfig: NextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["pdf-parse", "mammoth"],
   },
-  webpack: (config) => {
-    if (process.env.NODE_ENV === "development") {
+  webpack: (config, { dev }) => {
+    if (dev) {
       config.module.rules.push({
         test: /\.(jsx|tsx)$/,
         exclude: /node_modules/,
@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
+  // Vercel 배포 최적화
+  output: 'standalone',
+  poweredByHeader: false,
+  compress: true,
 };
 
 export default nextConfig;
