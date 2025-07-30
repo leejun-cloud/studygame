@@ -49,6 +49,15 @@ export function MainNav() {
       >
         결과 보기
       </Link>
+      <Link
+        href="/teacher/profile"
+        className={cn(
+          "text-sm font-medium transition-colors hover:text-primary",
+          pathname === "/teacher/profile" ? "text-primary" : "text-muted-foreground"
+        )}
+      >
+        프로필
+      </Link>
     </nav>
   );
 }
