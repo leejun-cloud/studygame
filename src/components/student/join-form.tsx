@@ -17,7 +17,7 @@ import { ArrowLeft, Gamepad2, Users, Zap } from "lucide-react";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { joinQuizSession } from "@/app/actions/session";
+import { routeJoinCode } from "@/app/actions/collaborative";
 
 export function JoinForm() {
   const [gameCode, setGameCode] = useState("");
@@ -30,21 +30,28 @@ export function JoinForm() {
     if (!gameCode.trim() || !studentName.trim()) return;
     setIsLoading(true);
 
-    const result = await joinQuizSession(
+    const result = await routeJoinCode(
       gameCode.trim(),
       studentName.trim()
     );
 
+    setIsLoading(false);
+
     if (result.error) {
       toast.error(result.error);
-      setIsLoading(false);
-    } else if (result.participant) {
-      const validName = studentName.trim();
-      toast.success("게임에 참여했습니다! 🎉");
+    } else if (result.type === 'live' && result.data) {
+      toast.success("실시간 퀴즈에 참여했습니다! 🎉");
       router.push(
-        `/student/session/${result.participant.session_id}?name=${encodeURIComponent(
-          validName
-        )}&participantId=${result.participant.id}`
+        `/student/session/${result.data.session_id}?name=${encodeURIComponent(
+          studentName.trim()
+        )}&participantId=${result.data.id}`
+      );
+    } else if (result.type === 'collab' && result.data) {
+      toast.success("문제 만들기에 참여했습니다! ✍️");
+      router.push(
+        `/student/collaborate/${result.data.sessionId}?name=${encodeURIComponent(
+          studentName.trim()
+        )}`
       );
     }
   };
@@ -72,10 +79,10 @@ export function JoinForm() {
                 </div>
               </div>
               <CardTitle className="text-center text-2xl font-bold mb-2">
-                퀴즈 게임 참여하기! 🎮
+                퀴즈 참여하기! 🎮
               </CardTitle>
               <CardDescription className="text-center text-white/90 text-lg">
-                선생님께 받은 게임 코드로 재미있는 퀴즈에 참여해보세요!
+                선생님께 받은 코드로 퀴즈에 참여하거나 문제를 만들어보세요!
               </CardDescription>
             </CardHeader>
             
@@ -100,7 +107,7 @@ export function JoinForm() {
                 <div className="space-y-2">
                   <Label htmlFor="game-code" className="text-lg font-medium flex items-center gap-2">
                     <Zap className="h-5 w-5 text-purple-500" />
-                    게임 코드
+                    참여 코드
                   </Label>
                   <Input
                     id="game-code"
@@ -122,12 +129,12 @@ export function JoinForm() {
                   {isLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      게임 참여 중...
+                      참여 중...
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <Gamepad2 className="h-5 w-5" />
-                      게임 시작하기! 🚀
+                      참여하기! 🚀
                     </div>
                   )}
                 </Button>
@@ -135,7 +142,7 @@ export function JoinForm() {
               
               <div className="mt-8 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
                 <p className="text-sm text-gray-600 text-center">
-                  💡 <strong>팁:</strong> 게임 코드는 선생님이 화면에 보여주는 6자리 코드예요!
+                  💡 <strong>팁:</strong> 선생님께 받은 6자리 코드를 입력해주세요!
                 </p>
               </div>
             </CardContent>

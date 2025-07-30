@@ -32,6 +32,15 @@ export function MainNav() {
         퀴즈 만들기
       </Link>
       <Link
+        href="/teacher/collaborative"
+        className={cn(
+          "text-sm font-medium transition-colors hover:text-primary",
+          pathname.startsWith("/teacher/collaborative") ? "text-primary" : "text-muted-foreground"
+        )}
+      >
+        협업 퀴즈
+      </Link>
+      <Link
         href="/teacher/results"
         className={cn(
           "text-sm font-medium transition-colors hover:text-primary",
