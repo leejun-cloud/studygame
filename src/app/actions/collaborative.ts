@@ -32,7 +32,7 @@ export async function createCollabSession(title: string) {
 
   const { data, error } = await supabaseAdmin
     .from("collaborative_sessions")
-    .insert({ title, user_id: null, join_code: joinCode }) // user_id is null
+    .insert([{ title, user_id: null, join_code: joinCode }]) // user_id is null
     .select()
     .single();
 
@@ -85,11 +85,11 @@ export async function submitQuestion(sessionId: string, studentName: string, que
 
     const { error } = await supabaseAdmin
         .from("submitted_questions")
-        .insert({
+        .insert([{
             session_id: sessionId,
             student_name: studentName,
             question_data: validation.data
-        });
+        }]);
     
     if (error) {
         console.error("Error submitting question:", error);
@@ -148,10 +148,10 @@ export async function finalizeCollabQuiz(sessionId: string) {
         return { error: "퀴즈를 생성하기 위한 데이터가 유효하지 않습니다. 모든 승인된 문제에 내용이 채워져 있는지 확인하세요." };
     }
 
-    const { error: insertError } = await supabaseAdmin.from("quizzes").insert({
+    const { error: insertError } = await supabaseAdmin.from("quizzes").insert([{
         ...validation.data,
         user_id: session.user_id
-    });
+    }]);
 
     if (insertError) {
         return { error: "퀴즈 저장에 실패했습니다." };
