@@ -5,6 +5,14 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { joinQuizSession } from "./session";
+import { z } from "zod";
+import { quizSchema } from "./quiz";
+
+const submittedQuestionSchema = z.object({
+  questionText: z.string().min(1, "질문 내용은 비워둘 수 없습니다."),
+  options: z.array(z.string().min(1, "모든 선택지를 입력해야 합니다.")).length(4, "4개의 선택지가 필요합니다."),
+  correctAnswerIndex: z.number().min(0).max(3),
+});
 
 /**
  * 새로운 협업 퀴즈 세션을 생성합니다.
@@ -69,12 +77,18 @@ export async function submitQuestion(sessionId: string, studentName: string, que
     if (!sessionId || !studentName || !questionData) {
         return { error: "필수 정보가 누락되었습니다." };
     }
+    
+    const validation = submittedQuestionSchema.safeParse(questionData);
+    if (!validation.success) {
+        return { error: validation.error.errors[0]?.message || "유효하지 않은 질문 형식입니다." };
+    }
+
     const { error } = await supabaseAdmin
         .from("submitted_questions")
         .insert({
             session_id: sessionId,
             student_name: studentName,
-            question_data: questionData
+            question_data: validation.data
         });
     
     if (error) {
@@ -123,13 +137,22 @@ export async function finalizeCollabQuiz(sessionId: string) {
         return { error: "세션 정보를 찾을 수 없습니다." };
     }
 
-    const newQuiz = {
+    const newQuizData = {
         title: `${session.title} (학생 참여형)`,
         questions: approvedQuestions.map(q => q.question_data),
-        user_id: session.user_id // This will be null for now
     };
 
-    const { error: insertError } = await supabaseAdmin.from("quizzes").insert(newQuiz);
+    const validation = quizSchema.safeParse(newQuizData);
+    if (!validation.success) {
+        console.error("Finalize quiz validation error:", validation.error);
+        return { error: "퀴즈를 생성하기 위한 데이터가 유효하지 않습니다. 모든 승인된 문제에 내용이 채워져 있는지 확인하세요." };
+    }
+
+    const { error: insertError } = await supabaseAdmin.from("quizzes").insert({
+        ...validation.data,
+        user_id: session.user_id
+    });
+
     if (insertError) {
         return { error: "퀴즈 저장에 실패했습니다." };
     }
