@@ -30,7 +30,7 @@ export default async function PublicQuizPage({
 }) {
   const { quiz, error: quizError } = await getQuiz(params.quizId);
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

@@ -24,7 +24,7 @@ const quizSchema = z.object({
  * @returns 저장된 퀴즈의 ID 또는 오류 메시지
  */
 export async function saveQuiz(data: z.infer<typeof quizSchema>) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -101,7 +101,7 @@ export async function getQuiz(quizId: string) {
  * @returns 퀴즈 목록 또는 오류 메시지
  */
 export async function getMyQuizzes() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -148,7 +148,7 @@ export async function getMyQuizzes() {
  */
 export async function copyQuiz(formData: FormData) {
   const quizId = formData.get("quizId") as string;
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

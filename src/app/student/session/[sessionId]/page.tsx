@@ -95,7 +95,7 @@ export default function StudentQuizPage() {
           const newSession = payload.new as Session;
           setSession((prevSession) => {
             // Reset answer state for new question
-            if (newSession.current_question_index !== prevSession?.current_question_index) {
+            if (prevSession && newSession.current_question_index !== prevSession.current_question_index) {
               setHasAnswered(false);
               setSelectedOption(null);
               setIsTimeUp(false);
@@ -112,7 +112,7 @@ export default function StudentQuizPage() {
   }, [sessionId, participantId, router]);
 
   const currentQuestion = useMemo(() => {
-    if (!quiz || session?.current_question_index === -1) return null;
+    if (!quiz || !session || session.current_question_index === -1) return null;
     return quiz.questions[session.current_question_index];
   }, [quiz, session?.current_question_index]);
 
