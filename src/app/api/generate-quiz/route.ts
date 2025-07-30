@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import mammoth from "mammoth";
 import pdf from "pdf-parse";
 
+export const runtime = 'nodejs';
+export const maxDuration = 30;
+
 export async function POST(req: NextRequest) {
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json(
@@ -94,16 +97,16 @@ export async function POST(req: NextRequest) {
     const quizData = JSON.parse(jsonString);
 
     return NextResponse.json(quizData);
-  } catch (error: any)
-{
+  } catch (error: any) {
     console.error("Error in generate-quiz API:", error);
     let errorMessage = "퀴즈 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+    
     if (error.message?.includes("API key not valid")) {
       errorMessage = "Gemini API 키가 유효하지 않습니다. 올바른 키인지 확인해주세요.";
     } else if (error instanceof SyntaxError) {
       errorMessage = "AI가 유효하지 않은 형식의 응답을 반환했습니다. 다시 시도해주세요.";
     } else if (error.message?.includes("SAFETY")) {
-        errorMessage = "콘텐츠 안전 문제로 인해 퀴즈를 생성할 수 없습니다. 다른 내용을 시도해주세요.";
+      errorMessage = "콘텐츠 안전 문제로 인해 퀴즈를 생성할 수 없습니다. 다른 내용을 시도해주세요.";
     }
     
     return NextResponse.json(

@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Quiz App
 
-## Getting Started
+실시간 AI 퀴즈 애플리케이션입니다. 교사는 AI를 활용해 퀴즈를 생성하고, 학생들과 실시간으로 퀴즈를 진행할 수 있습니다.
 
-First, run the development server:
+## 주요 기능
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- 🤖 AI 기반 퀴즈 자동 생성 (Google Gemini)
+- 📝 수동 퀴즈 생성
+- 🎮 실시간 퀴즈 게임
+- 📊 실시간 결과 분석
+- 👥 다중 참가자 지원
+- 📱 반응형 디자인
+
+## 기술 스택
+
+- **Frontend**: Next.js 15, React 18, TypeScript
+- **UI**: Tailwind CSS, Shadcn/UI
+- **Backend**: Supabase (Database, Auth, Realtime)
+- **AI**: Google Gemini API
+- **Deployment**: Vercel
+
+## 환경 변수 설정
+
+`.env.local` 파일을 생성하고 다음 변수들을 설정하세요:
+
+```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+
+# Google Gemini AI API Key
+GEMINI_API_KEY=your-gemini-api-key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 로컬 개발
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# 의존성 설치
+pnpm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# 개발 서버 실행
+pnpm dev
+```
 
-## Learn More
+## Vercel 배포
 
-To learn more about Next.js, take a look at the following resources:
+1. Vercel에 프로젝트 연결
+2. 환경 변수 설정 (위의 환경 변수들)
+3. 자동 배포 완료
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Vercel 설정
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Build Command**: `pnpm run build`
+- **Install Command**: `pnpm install --no-frozen-lockfile`
+- **Node.js Version**: 18.x
 
-## Deploy on Vercel
+## 데이터베이스 스키마
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Supabase에서 다음 테이블들이 자동으로 생성됩니다:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `profiles`: 사용자 프로필
+- `quizzes`: 퀴즈 데이터
+- `quiz_sessions`: 실시간 퀴즈 세션
+- `session_participants`: 세션 참가자
+- `participant_answers`: 참가자 답변
+
+## 라이선스
+
+MIT License
