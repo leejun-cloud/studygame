@@ -47,10 +47,6 @@ export async function saveQuiz(data: z.infer<typeof quizSchema>) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return { error: "로그인이 필요합니다." };
-  }
-
   const validation = quizSchema.safeParse(data);
   if (!validation.success) {
     return { error: "유효하지 않은 퀴즈 데이터입니다." };
@@ -60,7 +56,7 @@ export async function saveQuiz(data: z.infer<typeof quizSchema>) {
 
   const { data: quizData, error } = await supabaseAdmin
     .from("quizzes")
-    .insert([{ title, questions, user_id: user.id }])
+    .insert([{ title, questions, user_id: user?.id }])
     .select("id")
     .single();
 
@@ -124,15 +120,18 @@ export async function getMyQuizzes() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return { error: "로그인이 필요합니다." };
-  }
-
-  const { data, error } = await supabase
+  let query = supabase
     .from("quizzes")
     .select("id, title, created_at, questions")
-    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
+
+  // 로그인한 경우, 해당 사용자의 퀴즈만 필터링합니다.
+  // 로그인하지 않은 경우, 모든 퀴즈를 보여줍니다.
+  if (user) {
+    query = query.eq("user_id", user.id);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("내 퀴즈 불러오기 오류:", error);
