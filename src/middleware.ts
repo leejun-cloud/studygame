@@ -1,9 +1,39 @@
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // 이 미들웨어의 인증 로직이 앱을 멈추게 하는 원인이 되어 비활성화합니다.
-  // 교사 페이지에 대한 접근 제어는 `src/app/teacher/layout.tsx`에서 처리하고 있으므로 보안에는 문제가 없습니다.
-  return NextResponse.next()
+  const response = NextResponse.next()
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          response.cookies.set(name, value, options)
+        },
+        remove(name: string, options: CookieOptions) {
+          response.cookies.delete(name, options)
+        },
+      },
+    }
+  )
+
+  // 세션 갱신
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // 보호된 경로에 대한 접근 제어
+  if (!user && request.nextUrl.pathname.startsWith('/teacher')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    url.searchParams.set('next', request.nextUrl.pathname)
+    return NextResponse.redirect(url)
+  }
+
+  return response
 }
 
 export const config = {

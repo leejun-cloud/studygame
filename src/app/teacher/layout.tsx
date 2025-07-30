@@ -1,14 +1,35 @@
 import { UserNav } from "@/components/auth/user-nav";
 import { MainNav } from "@/components/teacher/main-nav";
 import { Toaster } from "@/components/ui/sonner";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export default async function TeacherLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // 참고: 앱 시작 문제를 해결하기 위해 인증 확인 로직을 임시로 비활성화했습니다.
-  // 이로 인해 현재 교사 페이지는 로그인 없이도 접근할 수 있습니다.
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
