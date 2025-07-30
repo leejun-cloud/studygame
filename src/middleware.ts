@@ -2,10 +2,11 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // Skip middleware for static files and API routes that don't need auth
+  // Skip middleware for static files and specific API routes
   if (
     request.nextUrl.pathname.startsWith('/_next') ||
     request.nextUrl.pathname.startsWith('/api/generate-quiz') ||
+    request.nextUrl.pathname.startsWith('/api/health') ||
     request.nextUrl.pathname.includes('.') ||
     request.nextUrl.pathname === '/favicon.ico'
   ) {
@@ -13,14 +14,14 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    // 응답 객체를 먼저 생성합니다.
+    // Create response object first
     const response = NextResponse.next({
       request: {
         headers: request.headers,
       },
     })
 
-    // 서버용 Supabase 클라이언트를 생성하고, 요청과 응답의 쿠키를 공유합니다.
+    // Create Supabase server client
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -30,24 +31,29 @@ export async function middleware(request: NextRequest) {
             return request.cookies.get(name)?.value
           },
           set(name: string, value: string, options: CookieOptions) {
-            // 브라우저에 쿠키를 설정하도록 응답 객체에 지시합니다.
             response.cookies.set({ name, value, ...options })
           },
           remove(name: string, options: CookieOptions) {
-            // 브라우저에서 쿠키를 삭제하도록 응답 객체에 지시합니다.
             response.cookies.set({ name, value: '', ...options })
           },
         },
       }
     )
 
-    // 사용자의 세션을 갱신합니다. 이 과정에서 쿠키가 변경될 수 있습니다.
-    await supabase.auth.getUser()
+    // Refresh session if expired - required for Server Components
+    const { data: { session }, error } = await supabase.auth.getSession()
+    
+    if (error) {
+      console.error('Middleware auth error:', error)
+    }
 
-    // 변경된 쿠키가 포함된 응답을 반환합니다.
+    // Log session info for debugging
+    if (session) {
+      console.log('Middleware: User authenticated:', session.user.email)
+    }
+
     return response
   } catch (error) {
-    // 에러가 발생해도 요청을 계속 진행
     console.error('Middleware error:', error)
     return NextResponse.next()
   }
