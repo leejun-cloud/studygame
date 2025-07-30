@@ -134,7 +134,7 @@ export default function StudentQuizPage() {
 
     await submitAnswer(
       participantId,
-      session.current_question_index,
+      session!.current_question_index,
       optionIndex,
       isCorrect,
       score

@@ -2,7 +2,7 @@
 
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { z } from "zod";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -24,14 +24,19 @@ const quizSchema = z.object({
  * @returns 저장된 퀴즈의 ID 또는 오류 메시지
  */
 export async function saveQuiz(data: z.infer<typeof quizSchema>) {
-  const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value;
+          return cookies().get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          cookies().set(name, value, options);
+        },
+        remove(name: string, options: CookieOptions) {
+          cookies().delete(name, options);
         },
       },
     }
@@ -95,14 +100,19 @@ export async function getQuiz(quizId: string) {
  * @returns 퀴즈 목록 또는 오류 메시지
  */
 export async function getMyQuizzes() {
-  const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value;
+          return cookies().get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          cookies().set(name, value, options);
+        },
+        remove(name: string, options: CookieOptions) {
+          cookies().delete(name, options);
         },
       },
     }
@@ -132,17 +142,23 @@ export async function getMyQuizzes() {
 
 /**
  * 다른 사용자의 퀴즈를 현재 로그인한 사용자의 계정으로 복사합니다.
- * @param quizId - 복사할 퀴즈의 ID
+ * @param formData - 복사할 퀴즈의 ID가 포함된 폼 데이터
  */
-export async function copyQuiz(quizId: string) {
-  const cookieStore = cookies();
+export async function copyQuiz(formData: FormData) {
+  const quizId = formData.get("quizId") as string;
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value;
+          return cookies().get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          cookies().set(name, value, options);
+        },
+        remove(name: string, options: CookieOptions) {
+          cookies().delete(name, options);
         },
       },
     }

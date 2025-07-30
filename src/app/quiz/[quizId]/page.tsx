@@ -15,6 +15,12 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 
+interface Question {
+  questionText: string;
+  options: string[];
+  correctAnswerIndex: number;
+}
+
 export default async function PublicQuizPage({
   params,
   searchParams,
@@ -24,11 +30,10 @@ export default async function PublicQuizPage({
 }) {
   const { quiz, error: quizError } = await getQuiz(params.quizId);
 
-  const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { get: (name) => cookieStore.get(name)?.value } }
+    { cookies: { get: (name) => cookies().get(name)?.value } }
   );
   const {
     data: { user },
@@ -72,7 +77,7 @@ export default async function PublicQuizPage({
                 <AlertDescription>{searchParams.error}</AlertDescription>
               </Alert>
             )}
-            {quiz.questions.map((q, index) => (
+            {(quiz.questions as Question[]).map((q: Question, index: number) => (
               <div key={index} className="border-t pt-3 first:border-t-0 first:pt-0">
                 <p className="font-semibold">
                   {index + 1}. {q.questionText}

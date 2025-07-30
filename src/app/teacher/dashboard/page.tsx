@@ -7,7 +7,11 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { QuizActions } from "@/components/teacher/quiz-actions";
 
-export default async function DashboardPage({ searchParams }: { searchParams?: { copied?: string } }) {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
   const { quizzes, error } = await getMyQuizzes();
 
   if (error) {
