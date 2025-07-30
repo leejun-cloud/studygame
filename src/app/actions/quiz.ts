@@ -24,19 +24,20 @@ const quizSchema = z.object({
  * @returns 저장된 퀴즈의 ID 또는 오류 메시지
  */
 export async function saveQuiz(data: z.infer<typeof quizSchema>) {
+  const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
-          return cookies().get(name)?.value;
+          return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          cookies().set(name, value, options);
+          cookieStore.set(name, value, options);
         },
         remove(name: string, options: CookieOptions) {
-          cookies().delete(name, options);
+          cookieStore.delete(name, options);
         },
       },
     }
@@ -100,19 +101,20 @@ export async function getQuiz(quizId: string) {
  * @returns 퀴즈 목록 또는 오류 메시지
  */
 export async function getMyQuizzes() {
+  const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
-          return cookies().get(name)?.value;
+          return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          cookies().set(name, value, options);
+          cookieStore.set(name, value, options);
         },
         remove(name: string, options: CookieOptions) {
-          cookies().delete(name, options);
+          cookieStore.delete(name, options);
         },
       },
     }
@@ -146,19 +148,20 @@ export async function getMyQuizzes() {
  */
 export async function copyQuiz(formData: FormData) {
   const quizId = formData.get("quizId") as string;
+  const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
-          return cookies().get(name)?.value;
+          return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          cookies().set(name, value, options);
+          cookieStore.set(name, value, options);
         },
         remove(name: string, options: CookieOptions) {
-          cookies().delete(name, options);
+          cookieStore.delete(name, options);
         },
       },
     }

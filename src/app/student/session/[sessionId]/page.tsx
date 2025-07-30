@@ -93,13 +93,15 @@ export default function StudentQuizPage() {
         { event: "UPDATE", schema: "public", table: "quiz_sessions", filter: `id=eq.${sessionId}` },
         (payload: RealtimePostgresChangesPayload<{ [key: string]: any }>) => {
           const newSession = payload.new as Session;
-          // Reset answer state for new question
-          if (newSession.current_question_index !== session?.current_question_index) {
-            setHasAnswered(false);
-            setSelectedOption(null);
-            setIsTimeUp(false);
-          }
-          setSession(newSession);
+          setSession((prevSession) => {
+            // Reset answer state for new question
+            if (newSession.current_question_index !== prevSession?.current_question_index) {
+              setHasAnswered(false);
+              setSelectedOption(null);
+              setIsTimeUp(false);
+            }
+            return newSession;
+          });
         }
       )
       .subscribe();
@@ -107,7 +109,7 @@ export default function StudentQuizPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [sessionId, participantId, router, session?.current_question_index]);
+  }, [sessionId, participantId, router]);
 
   const currentQuestion = useMemo(() => {
     if (!quiz || session?.current_question_index === -1) return null;
@@ -134,7 +136,7 @@ export default function StudentQuizPage() {
 
     await submitAnswer(
       participantId,
-      session!.current_question_index,
+      session.current_question_index,
       optionIndex,
       isCorrect,
       score
