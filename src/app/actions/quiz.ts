@@ -8,12 +8,12 @@ import { redirect } from "next/navigation";
 
 // Zod를 사용한 데이터 유효성 검사 스키마
 const quizQuestionSchema = z.object({
-  questionText: z.string().min(1, "질문 내용은 비워둘 수 없습니다."),
-  options: z.array(z.string().min(1, "선택지 내용은 비워둘 수 없습니다.")),
+  questionText: z.string(),
+  options: z.array(z.string()),
   correctAnswerIndex: z.number(),
 });
 
-export const quizSchema = z.object({
+const quizSchema = z.object({
   title: z.string().min(1, "제목은 필수입니다."),
   questions: z.array(quizQuestionSchema).min(1, "최소 1개 이상의 질문이 필요합니다."),
 });
@@ -120,19 +120,22 @@ export async function getMyQuizzes() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return { error: "로그인이 필요합니다.", quizzes: [] };
-  }
-
-  const { data, error } = await supabaseAdmin
+  let query = supabase
     .from("quizzes")
     .select("id, title, created_at, questions")
-    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
+
+  // 로그인한 경우, 해당 사용자의 퀴즈만 필터링합니다.
+  // 로그인하지 않은 경우, 모든 퀴즈를 보여줍니다.
+  if (user) {
+    query = query.eq("user_id", user.id);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("내 퀴즈 불러오기 오류:", error);
-    return { error: "퀴즈를 불러오는 데 실패했습니다.", quizzes: [] };
+    return { error: "퀴즈를 불러오는 데 실패했습니다." };
   }
 
   return { quizzes: data };

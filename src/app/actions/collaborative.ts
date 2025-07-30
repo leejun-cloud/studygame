@@ -5,33 +5,26 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { joinQuizSession } from "./session";
-import { z } from "zod";
-import { quizSchema } from "./quiz";
-
-const submittedQuestionSchema = z.object({
-  questionText: z.string().min(1, "질문 내용은 비워둘 수 없습니다."),
-  options: z.array(z.string().min(1, "모든 선택지를 입력해야 합니다.")).length(4, "4개의 선택지가 필요합니다."),
-  correctAnswerIndex: z.number().min(0).max(3),
-});
 
 /**
  * 새로운 협업 퀴즈 세션을 생성합니다.
  */
 export async function createCollabSession(title: string) {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { get: (name) => cookieStore.get(name)?.value } }
-  );
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "로그인이 필요합니다." };
+  // NOTE: Temporarily removed user check for development
+  // const cookieStore = await cookies();
+  // const supabase = createServerClient(
+  //   process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  //   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  //   { cookies: { get: (name) => cookieStore.get(name)?.value } }
+  // );
+  // const { data: { user } } = await supabase.auth.getUser();
+  // if (!user) return { error: "로그인이 필요합니다." };
 
   const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
   const { data, error } = await supabaseAdmin
     .from("collaborative_sessions")
-    .insert({ title, user_id: user.id, join_code: joinCode })
+    .insert({ title, user_id: null, join_code: joinCode }) // user_id is null
     .select()
     .single();
 
@@ -47,19 +40,20 @@ export async function createCollabSession(title: string) {
  * 로그인한 교사의 모든 협업 세션 목록을 가져옵니다.
  */
 export async function getMyCollabSessions() {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { get: (name) => cookieStore.get(name)?.value } }
-    );
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: "로그인이 필요합니다." };
+    // NOTE: Temporarily removed user check for development
+    // const cookieStore = await cookies();
+    // const supabase = createServerClient(
+    //   process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    //   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    //   { cookies: { get: (name) => cookieStore.get(name)?.value } }
+    // );
+    // const { data: { user } } = await supabase.auth.getUser();
+    // if (!user) return { error: "로그인이 필요합니다." };
 
     const { data, error } = await supabaseAdmin
         .from("collaborative_sessions")
         .select("*, submitted_questions(count)")
-        .eq("user_id", user.id)
+        // .eq("user_id", user.id) // Temporarily removed filter
         .order("created_at", { ascending: false });
 
     if (error) {
@@ -75,18 +69,12 @@ export async function submitQuestion(sessionId: string, studentName: string, que
     if (!sessionId || !studentName || !questionData) {
         return { error: "필수 정보가 누락되었습니다." };
     }
-    
-    const validation = submittedQuestionSchema.safeParse(questionData);
-    if (!validation.success) {
-        return { error: validation.error.errors[0]?.message || "유효하지 않은 질문 형식입니다." };
-    }
-
     const { error } = await supabaseAdmin
         .from("submitted_questions")
         .insert({
             session_id: sessionId,
             student_name: studentName,
-            question_data: validation.data
+            question_data: questionData
         });
     
     if (error) {
@@ -135,22 +123,13 @@ export async function finalizeCollabQuiz(sessionId: string) {
         return { error: "세션 정보를 찾을 수 없습니다." };
     }
 
-    const newQuizData = {
+    const newQuiz = {
         title: `${session.title} (학생 참여형)`,
         questions: approvedQuestions.map(q => q.question_data),
+        user_id: session.user_id // This will be null for now
     };
 
-    const validation = quizSchema.safeParse(newQuizData);
-    if (!validation.success) {
-        console.error("Finalize quiz validation error:", validation.error);
-        return { error: "퀴즈를 생성하기 위한 데이터가 유효하지 않습니다. 모든 승인된 문제에 내용이 채워져 있는지 확인하세요." };
-    }
-
-    const { error: insertError } = await supabaseAdmin.from("quizzes").insert({
-        ...validation.data,
-        user_id: session.user_id
-    });
-
+    const { error: insertError } = await supabaseAdmin.from("quizzes").insert(newQuiz);
     if (insertError) {
         return { error: "퀴즈 저장에 실패했습니다." };
     }

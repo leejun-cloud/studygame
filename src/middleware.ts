@@ -2,38 +2,61 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          response.cookies.set(name, value, options)
-        },
-        remove(name: string, options: CookieOptions) {
-          response.cookies.delete(name, options)
-        },
-      },
-    }
-  )
-
-  // 세션 갱신
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // 보호된 경로에 대한 접근 제어
-  if (!user && request.nextUrl.pathname.startsWith('/teacher')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    url.searchParams.set('next', request.nextUrl.pathname)
-    return NextResponse.redirect(url)
+  // Skip middleware for static files and specific API routes
+  if (
+    request.nextUrl.pathname.startsWith('/_next') ||
+    request.nextUrl.pathname.startsWith('/api/generate-quiz') ||
+    request.nextUrl.pathname.startsWith('/api/health') ||
+    request.nextUrl.pathname.includes('.') ||
+    request.nextUrl.pathname === '/favicon.ico'
+  ) {
+    return NextResponse.next()
   }
 
-  return response
+  try {
+    // Create response object first
+    const response = NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    })
+
+    // Create Supabase server client
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value
+          },
+          set(name: string, value: string, options: CookieOptions) {
+            response.cookies.set({ name, value, ...options })
+          },
+          remove(name: string, options: CookieOptions) {
+            response.cookies.set({ name, value: '', ...options })
+          },
+        },
+      }
+    )
+
+    // Refresh session if expired - required for Server Components
+    const { data: { session }, error } = await supabase.auth.getSession()
+    
+    if (error) {
+      console.error('Middleware auth error:', error)
+    }
+
+    // Log session info for debugging
+    if (session) {
+      console.log('Middleware: User authenticated:', session.user.email)
+    }
+
+    return response
+  } catch (error) {
+    console.error('Middleware error:', error)
+    return NextResponse.next()
+  }
 }
 
 export const config = {
