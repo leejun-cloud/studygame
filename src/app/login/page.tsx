@@ -7,12 +7,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 import { Toaster } from '@/components/ui/sonner'
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams?: { error?: string }
-}) {
-  const cookieStore = cookies()
+interface LoginPageProps {
+  searchParams: Promise<{ error?: string }>
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
+  
+  const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -38,11 +40,11 @@ export default async function LoginPage({
       <Toaster />
       <main className="flex flex-1 flex-col items-center justify-center bg-muted/40 p-4 sm:p-8">
         <div className="w-full max-w-md space-y-4">
-          {searchParams?.error && (
+          {params?.error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                {decodeURIComponent(searchParams.error)}
+                {decodeURIComponent(params.error)}
               </AlertDescription>
             </Alert>
           )}

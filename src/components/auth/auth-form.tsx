@@ -71,7 +71,6 @@ export function AuthForm() {
                 link_text: '비밀번호를 잊으셨나요?',
                 loading_button_label: '전송 중...',
               },
-              social_provider_text: '{{provider}} 계정으로 로그인',
             },
           }}
         />

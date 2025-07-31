@@ -34,10 +34,10 @@ export async function saveQuiz(data: z.infer<typeof quizSchema>) {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set(name, value, options);
+          cookieStore.set({ name, value, ...options });
         },
         remove(name: string, options: CookieOptions) {
-          cookieStore.delete(name, options);
+          cookieStore.set({ name, value: '', ...options });
         },
       },
     }
@@ -107,10 +107,10 @@ export async function getMyQuizzes() {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set(name, value, options);
+          cookieStore.set({ name, value, ...options });
         },
         remove(name: string, options: CookieOptions) {
-          cookieStore.delete(name, options);
+          cookieStore.set({ name, value: '', ...options });
         },
       },
     }
@@ -154,10 +154,10 @@ export async function copyQuiz(formData: FormData) {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set(name, value, options);
+          cookieStore.set({ name, value, ...options });
         },
         remove(name: string, options: CookieOptions) {
-          cookieStore.delete(name, options);
+          cookieStore.set({ name, value: '', ...options });
         },
       },
     }

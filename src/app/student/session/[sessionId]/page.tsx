@@ -118,9 +118,9 @@ export default function StudentQuizPage() {
   }, [sessionId, participantId, router]);
 
   const currentQuestion = useMemo(() => {
-    if (!quiz || session?.current_question_index === -1) return null;
+    if (!quiz || !session || session.current_question_index === -1) return null;
     return quiz.questions[session.current_question_index];
-  }, [quiz, session?.current_question_index]);
+  }, [quiz, session]);
 
   const progress = useMemo(() => {
     if (!quiz || !session) return 0;
@@ -245,7 +245,7 @@ export default function StudentQuizPage() {
             {/* 메인 게임 카드 */}
             <div className="max-w-4xl mx-auto">
               <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur overflow-hidden">
-                {session.status === 'in_progress' && (
+                {session.status === 'in_progress' && session.question_started_at && (
                   <div className="bg-gradient-to-r from-red-500 to-orange-500 p-4">
                     <QuizTimer
                       startTime={session.question_started_at}

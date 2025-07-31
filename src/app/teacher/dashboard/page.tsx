@@ -7,11 +7,12 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { QuizActions } from "@/components/teacher/quiz-actions";
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams?: { [key: string]: string | string[] | undefined };
-}) {
+interface DashboardPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+  const params = await searchParams;
   const { quizzes, error } = await getMyQuizzes();
 
   if (error) {
@@ -29,7 +30,7 @@ export default async function DashboardPage({
           </Button>
         </Link>
       </div>
-      {searchParams?.copied && (
+      {params?.copied && (
         <Alert className="mb-6">
           <Terminal className="h-4 w-4" />
           <AlertTitle>성공!</AlertTitle>

@@ -37,16 +37,16 @@ export function JoinForm() {
 
     setIsLoading(false);
 
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error(result.error);
-    } else if (result.type === 'live' && result.data) {
+    } else if ('type' in result && result.type === 'live' && result.data) {
       toast.success("실시간 퀴즈에 참여했습니다! 🎉");
       router.push(
         `/student/session/${result.data.session_id}?name=${encodeURIComponent(
           studentName.trim()
         )}&participantId=${result.data.id}`
       );
-    } else if (result.type === 'collab' && result.data) {
+    } else if ('type' in result && result.type === 'collab' && result.data) {
       toast.success("문제 만들기에 참여했습니다! ✍️");
       router.push(
         `/student/collaborate/${result.data.sessionId}?name=${encodeURIComponent(
