@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import Link from "next/link";
 
 export default function Home() {
@@ -38,7 +37,16 @@ export default function Home() {
           </div>
         </div>
       </main>
-      <MadeWithDyad />
+      <footer className="p-4 text-center">
+        <a
+          href="https://www.dyad.sh/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-gray-500 hover:text-gray-700"
+        >
+          Made with Dyad
+        </a>
+      </footer>
     </div>
   );
 }
