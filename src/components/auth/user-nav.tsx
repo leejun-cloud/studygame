@@ -11,88 +11,36 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-interface UserProfile {
-  email?: string;
-  full_name?: string | null;
-  avatar_url?: string | null;
-}
+import { User } from "@supabase/supabase-js";
 
 export function UserNav() {
   const router = useRouter();
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("full_name, avatar_url")
-          .eq("id", user.id)
-          .single();
-        
-        if (error) {
-          setUserProfile({
-            email: user.email,
-            full_name: user.user_metadata?.full_name,
-            avatar_url: user.user_metadata?.avatar_url,
-          });
-        } else {
-          setUserProfile({
-            email: user.email,
-            full_name: profile.full_name,
-            avatar_url: profile.avatar_url,
-          });
-        }
-      } else {
-        setUserProfile(null);
-      }
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
     };
-    
-    fetchUserProfile();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-        fetchUserProfile();
-      }
-      if (event === 'SIGNED_OUT') {
-        setUserProfile(null);
-        router.push('/');
-        router.refresh();
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [router]);
+    getUser();
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
   };
 
-  if (!userProfile) {
-    return (
-      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-        <Avatar className="h-8 w-8">
-          <AvatarFallback>?</AvatarFallback>
-        </Avatar>
-      </Button>
-    );
-  }
-
-  const userInitial = userProfile.full_name?.charAt(0).toUpperCase() || userProfile.email?.charAt(0).toUpperCase() || "T";
+  const userInitial = user?.email?.charAt(0).toUpperCase() || "T";
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={userProfile.avatar_url || undefined} alt="Avatar" />
+            <AvatarImage src={user?.user_metadata?.avatar_url} alt="Avatar" />
             <AvatarFallback>{userInitial}</AvatarFallback>
           </Avatar>
         </Button>
@@ -101,17 +49,13 @@ export function UserNav() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {userProfile.full_name || "Teacher"}
+              {user?.user_metadata?.full_name || "Teacher"}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
-              {userProfile.email}
+              {user?.email}
             </p>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/teacher/profile">프로필</Link>
-        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           로그아웃

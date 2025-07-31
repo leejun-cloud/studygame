@@ -1,62 +1,9 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // Skip middleware for static files and specific API routes
-  if (
-    request.nextUrl.pathname.startsWith('/_next') ||
-    request.nextUrl.pathname.startsWith('/api/generate-quiz') ||
-    request.nextUrl.pathname.startsWith('/api/health') ||
-    request.nextUrl.pathname.includes('.') ||
-    request.nextUrl.pathname === '/favicon.ico'
-  ) {
-    return NextResponse.next()
-  }
-
-  try {
-    // Create response object first
-    const response = NextResponse.next({
-      request: {
-        headers: request.headers,
-      },
-    })
-
-    // Create Supabase server client
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return request.cookies.get(name)?.value
-          },
-          set(name: string, value: string, options: CookieOptions) {
-            response.cookies.set({ name, value, ...options })
-          },
-          remove(name: string, options: CookieOptions) {
-            response.cookies.set({ name, value: '', ...options })
-          },
-        },
-      }
-    )
-
-    // Refresh session if expired - required for Server Components
-    const { data: { session }, error } = await supabase.auth.getSession()
-    
-    if (error) {
-      console.error('Middleware auth error:', error)
-    }
-
-    // Log session info for debugging
-    if (session) {
-      console.log('Middleware: User authenticated:', session.user.email)
-    }
-
-    return response
-  } catch (error) {
-    console.error('Middleware error:', error)
-    return NextResponse.next()
-  }
+  // 이 미들웨어의 인증 로직이 앱을 멈추게 하는 원인이 되어 비활성화합니다.
+  // 교사 페이지에 대한 접근 제어는 `src/app/teacher/layout.tsx`에서 처리하고 있으므로 보안에는 문제가 없습니다.
+  return NextResponse.next()
 }
 
 export const config = {
