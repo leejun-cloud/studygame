@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { BookMarked } from "lucide-react";
+import { Puzzle } from "lucide-react";
 
 export function MainNav() {
   const pathname = usePathname();
   return (
     <nav className="flex items-center space-x-4 lg:space-x-6">
       <Link href="/teacher/dashboard" className="mr-6 flex items-center space-x-2">
-        <BookMarked className="h-6 w-6" />
+        <Puzzle className="h-6 w-6" />
         <span className="font-bold">AI Quiz</span>
       </Link>
       <Link
