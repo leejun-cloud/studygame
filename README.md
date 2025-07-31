@@ -37,10 +37,10 @@ GEMINI_API_KEY=your-gemini-api-key
 
 ```bash
 # 의존성 설치
-pnpm install
+npm install
 
 # 개발 서버 실행
-pnpm dev
+npm run dev
 ```
 
 ## Vercel 배포
@@ -51,8 +51,8 @@ pnpm dev
 
 ### Vercel 설정
 
-- **Build Command**: `pnpm run build`
-- **Install Command**: `pnpm install --no-frozen-lockfile`
+- **Build Command**: `npm run build`
+- **Install Command**: `npm install`
 - **Node.js Version**: 18.x
 
 ## 데이터베이스 스키마
