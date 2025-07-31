@@ -47,6 +47,12 @@ export async function createCollabSession(title: string) {
  * 로그인한 교사의 모든 협업 세션 목록을 가져옵니다.
  */
 export async function getMyCollabSessions() {
+    // 임시 수정: SUPABASE_SERVICE_ROLE_KEY가 없을 때 앱 충돌을 방지하기 위해 빈 배열을 반환합니다.
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.warn("SUPABASE_SERVICE_ROLE_KEY is not set. Returning empty sessions array.");
+      return { sessions: [] };
+    }
+
     const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

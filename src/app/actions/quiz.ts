@@ -97,6 +97,12 @@ export async function getQuiz(quizId: string) {
  * @returns 퀴즈 목록 또는 오류 메시지
  */
 export async function getMyQuizzes() {
+  // 임시 수정: SUPABASE_SERVICE_ROLE_KEY가 없을 때 앱 충돌을 방지하기 위해 빈 배열을 반환합니다.
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn("SUPABASE_SERVICE_ROLE_KEY is not set. Returning empty quizzes array.");
+    return { quizzes: [] };
+  }
+
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
