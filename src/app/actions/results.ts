@@ -6,12 +6,6 @@ import { supabaseAdmin } from "@/lib/supabase/server";
  * 완료된 모든 퀴즈 세션 목록을 가져옵니다.
  */
 export async function getFinishedSessions() {
-  // 임시 수정: SUPABASE_SERVICE_ROLE_KEY가 없을 때 앱 충돌을 방지하기 위해 빈 배열을 반환합니다.
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.warn("SUPABASE_SERVICE_ROLE_KEY is not set. Returning empty sessions array.");
-    return { sessions: [] };
-  }
-
   const { data: sessions, error } = await supabaseAdmin
     .from("quiz_sessions")
     .select(`
