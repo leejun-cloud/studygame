@@ -37,7 +37,7 @@ export async function createQuizSession(quizId: string) {
       quiz_id: quizId,
       join_code: joinCode,
       status: "waiting",
-      user_id: user?.id,
+      user_id: user?.id || null, // user_id가 없으면 null로 저장
     })
     .select()
     .single();

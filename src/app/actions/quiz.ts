@@ -5,6 +5,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { quizSchema } from "@/lib/schemas"; // 스키마를 새 파일에서 가져옵니다.
+import { z } from "zod";
 
 /**
  * 퀴즈를 데이터베이스에 저장하는 함수
@@ -44,7 +45,7 @@ export async function saveQuiz(data: z.infer<typeof quizSchema>) {
 
   const { data: quizData, error } = await supabaseAdmin
     .from("quizzes")
-    .insert([{ title, questions, user_id: user?.id }])
+    .insert([{ title, questions, user_id: user?.id || null }]) // user_id가 없으면 null로 저장
     .select("id")
     .single();
 
@@ -82,6 +83,7 @@ export async function getQuiz(quizId: string) {
 
 /**
  * 로그인한 사용자의 모든 퀴즈를 불러오는 함수
+ * (로그인하지 않은 경우에도 퀴즈를 불러올 수 있도록 수정)
  * @returns 퀴즈 목록 또는 오류 메시지
  */
 export async function getMyQuizzes() {
@@ -108,15 +110,23 @@ export async function getMyQuizzes() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return { error: "로그인이 필요합니다.", quizzes: [] };
-  }
-
-  const { data, error } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("quizzes")
     .select("id, title, created_at, questions")
-    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
+
+  // 사용자가 로그인되어 있으면 해당 사용자의 퀴즈만 필터링
+  // 로그인되어 있지 않으면 user_id가 null인 퀴즈를 포함하여 모든 퀴즈를 가져옴
+  if (user) {
+    query = query.eq("user_id", user.id);
+  } else {
+    // 로그인하지 않은 경우, user_id가 null인 퀴즈만 보여주거나,
+    // 모든 퀴즈를 보여줄지 결정해야 합니다. 여기서는 user_id가 null인 퀴즈만 보여주도록 합니다.
+    // 만약 모든 퀴즈를 보여주고 싶다면 이 else 블록을 제거하세요.
+    query = query.is("user_id", null);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("내 퀴즈 불러오기 오류:", error);
@@ -128,6 +138,7 @@ export async function getMyQuizzes() {
 
 /**
  * 다른 사용자의 퀴즈를 현재 로그인한 사용자의 계정으로 복사합니다.
+ * (로그인 없이도 복사 가능하도록 수정)
  * @param formData - 복사할 퀴즈의 ID가 포함된 폼 데이터
  */
 export async function copyQuiz(formData: FormData) {
@@ -155,9 +166,10 @@ export async function copyQuiz(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return redirect(`/login?redirect=/quiz/${quizId}`);
-  }
+  // 로그인하지 않은 경우, 로그인 페이지로 리디렉션하지 않고 user_id를 null로 처리
+  // if (!user) {
+  //   return redirect(`/login?redirect=/quiz/${quizId}`);
+  // }
 
   const { data: originalQuiz, error: fetchError } = await supabaseAdmin
     .from("quizzes")
@@ -169,7 +181,8 @@ export async function copyQuiz(formData: FormData) {
     return redirect(`/quiz/${quizId}?error=${encodeURIComponent("원본 퀴즈를 찾을 수 없습니다.")}`);
   }
 
-  if (originalQuiz.user_id === user.id) {
+  // 자신이 만든 퀴즈는 복사할 수 없도록 유지 (user가 있는 경우에만 해당)
+  if (user && originalQuiz.user_id === user.id) {
     return redirect(`/quiz/${quizId}?error=${encodeURIComponent("자신이 만든 퀴즈는 복사할 수 없습니다.")}`);
   }
 
@@ -178,7 +191,7 @@ export async function copyQuiz(formData: FormData) {
     .insert({
       title: `${originalQuiz.title} (복사본)`,
       questions: originalQuiz.questions,
-      user_id: user.id,
+      user_id: user?.id || null, // 로그인하지 않은 경우 user_id는 null
     });
 
   if (insertError) {

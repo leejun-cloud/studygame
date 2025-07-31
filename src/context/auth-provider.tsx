@@ -49,11 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     user,
   };
 
-  // 로딩 중에는 자식 컴포넌트를 렌더링하지 않아, 인증 상태가 확립되기 전에 발생하는 오류를 방지합니다.
-  if (loading) {
-    return null;
-  }
-
+  // 로딩 중에도 자식 컴포넌트를 렌더링하여 로그인 여부와 관계없이 앱이 표시되도록 합니다.
   return (
     <AuthContext.Provider value={value}>
       {children}

@@ -25,13 +25,13 @@ export async function createCollabSession(title: string) {
     { cookies: { get: (name) => cookieStore.get(name)?.value } }
   );
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "로그인이 필요합니다." };
+  // 로그인 체크 제거: if (!user) return { error: "로그인이 필요합니다." };
 
   const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
   const { data, error } = await supabaseAdmin
     .from("collaborative_sessions")
-    .insert({ title, user_id: user.id, join_code: joinCode })
+    .insert({ title, user_id: user?.id || null, join_code: joinCode }) // user_id가 없으면 null로 저장
     .select()
     .single();
 
@@ -45,6 +45,7 @@ export async function createCollabSession(title: string) {
 
 /**
  * 로그인한 교사의 모든 협업 세션 목록을 가져옵니다.
+ * (로그인하지 않은 경우에도 세션을 불러올 수 있도록 수정)
  */
 export async function getMyCollabSessions() {
     const cookieStore = await cookies();
@@ -54,13 +55,23 @@ export async function getMyCollabSessions() {
       { cookies: { get: (name) => cookieStore.get(name)?.value } }
     );
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: "로그인이 필요합니다." };
+    // 로그인 체크 제거: if (!user) return { error: "로그인이 필요합니다." };
 
-    const { data, error } = await supabaseAdmin
+    let query = supabaseAdmin
         .from("collaborative_sessions")
         .select("*, submitted_questions(count)")
-        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
+
+    // 사용자가 로그인되어 있으면 해당 사용자의 세션만 필터링
+    // 로그인되어 있지 않으면 user_id가 null인 세션을 포함하여 모든 세션을 가져옴
+    if (user) {
+        query = query.eq("user_id", user.id);
+    } else {
+        // 로그인하지 않은 경우, user_id가 null인 세션만 보여주도록 합니다.
+        query = query.is("user_id", null);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
         return { error: "세션 목록을 불러오는 데 실패했습니다." };
@@ -148,7 +159,7 @@ export async function finalizeCollabQuiz(sessionId: string) {
 
     const { error: insertError } = await supabaseAdmin.from("quizzes").insert({
         ...validation.data,
-        user_id: session.user_id
+        user_id: session.user_id // 세션 생성 시 user_id가 null이면 그대로 null이 됩니다.
     });
 
     if (insertError) {
