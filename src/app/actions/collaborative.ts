@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { joinQuizSession } from "./session";
 import { z } from "zod";
-import { quizSchema } from "./quiz";
+import { quizSchema } from "@/lib/schemas"; // 스키마를 새 파일에서 가져옵니다.
 
 const submittedQuestionSchema = z.object({
   questionText: z.string().min(1, "질문 내용은 비워둘 수 없습니다."),

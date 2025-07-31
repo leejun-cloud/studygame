@@ -1,22 +1,10 @@
 "use server";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { z } from "zod";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-
-// Zod를 사용한 데이터 유효성 검사 스키마
-const quizQuestionSchema = z.object({
-  questionText: z.string().min(1, "질문 내용은 비워둘 수 없습니다."),
-  options: z.array(z.string().min(1, "선택지 내용은 비워둘 수 없습니다.")),
-  correctAnswerIndex: z.number(),
-});
-
-export const quizSchema = z.object({
-  title: z.string().min(1, "제목은 필수입니다."),
-  questions: z.array(quizQuestionSchema).min(1, "최소 1개 이상의 질문이 필요합니다."),
-});
+import { quizSchema } from "@/lib/schemas"; // 스키마를 새 파일에서 가져옵니다.
 
 /**
  * 퀴즈를 데이터베이스에 저장하는 함수
