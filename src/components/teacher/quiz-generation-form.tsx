@@ -138,14 +138,14 @@ export function QuizGenerationForm({ onQuizGenerated }: QuizGenerationFormProps)
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="file">파일 업로드 (PDF, DOCX, TXT)</Label>
+            <Label htmlFor="file">파일 업로드 (PDF, DOCX, TXT, 이미지)</Label>
             <Input
               id="file"
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
               disabled={isLoading}
-              accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+              accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,image/png,image/jpeg"
             />
             {file && (
               <div className="mt-2 flex items-center justify-between rounded-lg border bg-muted/50 p-2 text-sm">

@@ -16,7 +16,8 @@ export async function POST(req: NextRequest) {
 
   const contentType = req.headers.get("content-type") || "";
   let context = "";
-  let numQuestions = 5; // 기본값
+  let numQuestions = 5;
+  let imagePart: any = null;
 
   try {
     if (contentType.includes("multipart/form-data")) {
@@ -34,7 +35,14 @@ export async function POST(req: NextRequest) {
 
       const buffer = Buffer.from(await file.arrayBuffer());
 
-      if (file.type === "application/pdf") {
+      if (file.type.startsWith("image/")) {
+        imagePart = {
+          inlineData: {
+            data: buffer.toString("base64"),
+            mimeType: file.type,
+          },
+        };
+      } else if (file.type === "application/pdf") {
         const data = await pdf(buffer);
         context = data.text;
       } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
@@ -43,7 +51,7 @@ export async function POST(req: NextRequest) {
       } else if (file.type === "text/plain") {
         context = buffer.toString("utf-8");
       } else {
-        return NextResponse.json({ error: "지원하지 않는 파일 형식입니다. PDF, DOCX, TXT 파일만 가능합니다." }, { status: 400 });
+        return NextResponse.json({ error: "지원하지 않는 파일 형식입니다. PDF, DOCX, TXT, 이미지 파일만 가능합니다." }, { status: 400 });
       }
     } else if (contentType.includes("application/json")) {
       const { context: textContext, numQuestions: nq } = await req.json();
@@ -55,7 +63,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "잘못된 요청 형식입니다." }, { status: 400 });
     }
 
-    if (!context) {
+    if (!context && !imagePart) {
       return NextResponse.json(
         { error: "퀴즈를 생성할 내용이 없습니다." },
         { status: 400 }
@@ -70,9 +78,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const prompt = `
-      당신은 퀴즈 생성 API입니다. 주어진 텍스트를 기반으로 ${numQuestions}개의 객관식 퀴즈를 생성하세요. 
-      각 질문에는 4개의 선택지가 있어야 하며, 정답은 하나뿐입니다.
+    const basePrompt = `
+      당신은 퀴즈 생성 API입니다. 각 질문에는 4개의 선택지가 있어야 하며, 정답은 하나뿐입니다.
       응답은 반드시 유효한 JSON 객체 하나여야 하며, 다른 설명이나 마크다운 서식을 포함해서는 안 됩니다.
       JSON 객체는 다음 스키마를 따라야 합니다:
       {
@@ -84,18 +91,33 @@ export async function POST(req: NextRequest) {
           }
         ]
       }
-
-      퀴즈 생성용 텍스트:
-      """
-      ${context}
-      """
     `;
 
-    const result = await model.generateContent(prompt);
+    let prompt;
+    let generationRequest: any;
+
+    if (imagePart) {
+      prompt = `
+        ${basePrompt}
+        먼저 제공된 이미지에서 모든 텍스트를 추출(OCR)한 다음, 추출된 텍스트를 기반으로 ${numQuestions}개의 객관식 퀴즈를 생성하세요.
+      `;
+      generationRequest = [prompt, imagePart];
+    } else {
+      prompt = `
+        ${basePrompt}
+        주어진 텍스트를 기반으로 ${numQuestions}개의 객관식 퀴즈를 생성하세요. 
+        퀴즈 생성용 텍스트:
+        """
+        ${context}
+        """
+      `;
+      generationRequest = prompt;
+    }
+
+    const result = await model.generateContent(generationRequest);
     const response = await result.response;
     let jsonString = response.text();
     
-    // AI 응답이 markdown 코드 블록으로 감싸져 있을 경우를 대비해 정리합니다.
     if (jsonString.startsWith("```json")) {
       jsonString = jsonString.slice(7, -3).trim();
     } else if (jsonString.startsWith("```")) {
