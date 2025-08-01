@@ -93,7 +93,15 @@ export async function POST(req: NextRequest) {
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const jsonString = response.text();
+    let jsonString = response.text();
+    
+    // AI 응답이 markdown 코드 블록으로 감싸져 있을 경우를 대비해 정리합니다.
+    if (jsonString.startsWith("```json")) {
+      jsonString = jsonString.slice(7, -3).trim();
+    } else if (jsonString.startsWith("```")) {
+      jsonString = jsonString.slice(3, -3).trim();
+    }
+
     const quizData = JSON.parse(jsonString);
 
     return NextResponse.json(quizData);
