@@ -14,9 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, Edit, Trash2, PlusCircle, Save, XCircle } from "lucide-react";
+import { Loader2, Edit, Trash2, PlusCircle, Save, XCircle, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { saveQuiz } from "@/app/actions/quiz";
+import { generateQuizDocx } from "@/lib/docx-generator";
 
 interface QuizQuestion {
   questionText: string;
@@ -41,10 +42,9 @@ export function QuizPreview({ quiz, title, onQuizSaved }: QuizPreviewProps) {
   const [editedQuiz, setEditedQuiz] = useState<{ questions: QuizQuestion[] }>(quiz);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  // quiz prop이 변경될 때 editedQuiz 상태를 업데이트합니다.
   useEffect(() => {
     setEditedQuiz(quiz);
-    setEditingIndex(null); // 새 퀴즈가 로드되면 편집 상태를 초기화합니다.
+    setEditingIndex(null);
   }, [quiz]);
 
   const handleQuestionTextChange = (index: number, value: string) => {
@@ -70,7 +70,7 @@ export function QuizPreview({ quiz, title, onQuizSaved }: QuizPreviewProps) {
       ...prev,
       questions: [...prev.questions, { ...emptyQuestion }],
     }));
-    setEditingIndex(editedQuiz.questions.length); // 새로 추가된 질문을 자동으로 편집 모드로 전환
+    setEditingIndex(editedQuiz.questions.length);
   };
 
   const handleRemoveQuestion = (index: number) => {
@@ -83,9 +83,9 @@ export function QuizPreview({ quiz, title, onQuizSaved }: QuizPreviewProps) {
       questions: prev.questions.filter((_, i) => i !== index),
     }));
     if (editingIndex === index) {
-      setEditingIndex(null); // 편집 중인 질문이 삭제되면 편집 모드 해제
+      setEditingIndex(null);
     } else if (editingIndex !== null && editingIndex > index) {
-      setEditingIndex(editingIndex - 1); // 삭제된 질문보다 뒤에 있는 질문의 인덱스 조정
+      setEditingIndex(editingIndex - 1);
     }
   };
 
@@ -104,9 +104,6 @@ export function QuizPreview({ quiz, title, onQuizSaved }: QuizPreviewProps) {
   };
 
   const handleCancelEdit = () => {
-    // 현재 편집 중인 질문의 변경 사항을 취소하고 편집 모드를 종료합니다.
-    // 이 구현에서는 변경 사항을 완전히 되돌리지 않고, 단순히 편집 모드만 종료합니다.
-    // (더 복잡한 되돌리기 기능을 원한다면, 편집 시작 시 원본 질문 데이터를 저장해야 합니다.)
     setEditingIndex(null);
   };
 
@@ -141,6 +138,23 @@ export function QuizPreview({ quiz, title, onQuizSaved }: QuizPreviewProps) {
     }
   };
 
+  const handleDownload = async () => {
+    if (editingIndex !== null) {
+      toast.error("현재 편집 중인 질문을 먼저 저장하거나 취소해주세요.");
+      return;
+    }
+    toast.info("Word 파일 생성을 시작합니다...");
+    try {
+        await generateQuizDocx({
+            title: title || "제목 없는 퀴즈",
+            questions: editedQuiz.questions,
+        });
+    } catch (error) {
+        console.error("Error generating docx:", error);
+        toast.error("파일 생성 중 오류가 발생했습니다.");
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -151,7 +165,6 @@ export function QuizPreview({ quiz, title, onQuizSaved }: QuizPreviewProps) {
         {editedQuiz.questions.map((q, index) => (
           <div key={index} className="border-t pt-4 first:border-t-0 first:pt-0 relative">
             {editingIndex === index ? (
-              // 편집 모드
               <div className="space-y-4">
                 <Label>질문 {index + 1}</Label>
                 <Textarea
@@ -187,7 +200,6 @@ export function QuizPreview({ quiz, title, onQuizSaved }: QuizPreviewProps) {
                 </div>
               </div>
             ) : (
-              // 읽기 모드
               <>
                 <p className="font-semibold">{index + 1}. {q.questionText}</p>
                 <ul className="mt-2 space-y-1 list-none">
@@ -216,7 +228,11 @@ export function QuizPreview({ quiz, title, onQuizSaved }: QuizPreviewProps) {
           질문 추가
         </Button>
       </CardContent>
-      <CardFooter className="flex justify-end">
+      <CardFooter className="flex justify-end gap-2">
+        <Button variant="outline" onClick={handleDownload} disabled={isSaving || editingIndex !== null}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Word로 다운로드
+        </Button>
         <Button onClick={handleSaveQuiz} disabled={isSaving || editingIndex !== null}>
           {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           퀴즈 저장하기
