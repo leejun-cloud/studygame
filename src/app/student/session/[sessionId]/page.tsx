@@ -16,6 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Loader2, CheckCircle, XCircle, Trophy, Zap, Star, Target, Clock } from "lucide-react";
 import { QuizTimer } from "@/components/quiz/timer";
+import { BackgroundMusic } from "@/components/quiz/background-music";
+import { QuizSoundEffects } from "@/components/quiz/quiz-sound-effects";
 import { cn } from "@/lib/utils";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
@@ -56,6 +58,13 @@ export default function StudentQuizPage() {
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
+  
+  // 음악 및 효과음 상태
+  const [playCorrectSound, setPlayCorrectSound] = useState(false);
+  const [playIncorrectSound, setPlayIncorrectSound] = useState(false);
+  const [playTimeUpSound, setPlayTimeUpSound] = useState(false);
+  const [playGameStartSound, setPlayGameStartSound] = useState(false);
+  const [playGameEndSound, setPlayGameEndSound] = useState(false);
 
   useEffect(() => {
     if (!participantId) {
@@ -99,6 +108,18 @@ export default function StudentQuizPage() {
         (payload: RealtimePostgresChangesPayload<{ [key: string]: any }>) => {
           const newSession = payload.new as Session;
           setSession((prevSession) => {
+            // 게임 시작 효과음
+            if (prevSession?.status === 'waiting' && newSession.status === 'in_progress') {
+              setPlayGameStartSound(true);
+              setTimeout(() => setPlayGameStartSound(false), 100);
+            }
+            
+            // 게임 종료 효과음
+            if (prevSession?.status !== 'finished' && newSession.status === 'finished') {
+              setPlayGameEndSound(true);
+              setTimeout(() => setPlayGameEndSound(false), 100);
+            }
+
             // Reset answer state for new question
             if (newSession.current_question_index !== prevSession?.current_question_index) {
               setHasAnswered(false);
@@ -129,6 +150,9 @@ export default function StudentQuizPage() {
 
   const handleTimeUp = () => {
     setIsTimeUp(true);
+    setPlayTimeUpSound(true);
+    setTimeout(() => setPlayTimeUpSound(false), 100);
+    
     if (!hasAnswered) {
       setHasAnswered(true);
       setStreak(0);
@@ -145,11 +169,16 @@ export default function StudentQuizPage() {
     const isCorrect = optionIndex === currentQuestion.correctAnswerIndex;
     const points = isCorrect ? 100 : 0;
 
+    // 효과음 재생
     if (isCorrect) {
       setScore(prev => prev + points);
       setStreak(prev => prev + 1);
+      setPlayCorrectSound(true);
+      setTimeout(() => setPlayCorrectSound(false), 100);
     } else {
       setStreak(0);
+      setPlayIncorrectSound(true);
+      setTimeout(() => setPlayIncorrectSound(false), 100);
     }
 
     await submitAnswer(
@@ -160,6 +189,9 @@ export default function StudentQuizPage() {
       points
     );
   };
+
+  // 배경음악 재생 조건
+  const shouldPlayMusic = session?.status === 'in_progress' || session?.status === 'question_result';
 
   if (loading || !session || !quiz) {
     return (
@@ -183,7 +215,7 @@ export default function StudentQuizPage() {
                   <Target className="h-8 w-8 text-white" />
                 </div>
                 <CardTitle className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-                  게임 대기실
+                  게임 대기실 🎵
                 </CardTitle>
                 <CardDescription className="text-base">
                   선생님이 게임을 시작할 때까지 잠시만 기다려주세요!
@@ -262,7 +294,7 @@ export default function StudentQuizPage() {
                       <span className="text-2xl font-bold">{session.current_question_index + 1}</span>
                     </div>
                     <div>
-                      <CardTitle className="text-sm opacity-90">질문</CardTitle>
+                      <CardTitle className="text-sm opacity-90">질문 🎵</CardTitle>
                       <p className="text-2xl font-bold leading-tight">{currentQuestion.questionText}</p>
                     </div>
                   </div>
@@ -355,7 +387,7 @@ export default function StudentQuizPage() {
                 <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
                   <Trophy className="h-12 w-12 text-white" />
                 </div>
-                <CardTitle className="text-3xl font-bold mb-2">게임 완료! 🎉</CardTitle>
+                <CardTitle className="text-3xl font-bold mb-2">게임 완료! 🎉🎵</CardTitle>
                 <CardDescription className="text-white/90 text-lg">
                   {name}님, 정말 수고하셨어요!
                 </CardDescription>
@@ -387,5 +419,21 @@ export default function StudentQuizPage() {
     }
   };
 
-  return renderContent();
+  return (
+    <>
+      {/* 배경음악 */}
+      <BackgroundMusic isPlaying={shouldPlayMusic} volume={0.2} />
+      
+      {/* 효과음 */}
+      <QuizSoundEffects
+        playCorrect={playCorrectSound}
+        playIncorrect={playIncorrectSound}
+        playTimeUp={playTimeUpSound}
+        playGameStart={playGameStartSound}
+        playGameEnd={playGameEndSound}
+      />
+      
+      {renderContent()}
+    </>
+  );
 }
